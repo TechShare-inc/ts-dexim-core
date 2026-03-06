@@ -5,7 +5,6 @@ multiple packages (inspire-node, nova-node, g1-node, etc.).
 """
 from __future__ import annotations
 
-
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
@@ -20,7 +19,6 @@ except ImportError as _err:
         "Install it via conda: conda install pinocchio -c conda-forge"
     ) from _err
 
-
 @dataclass
 class SubscriberConfig:
     """Configuration for Manus data subscriber.
@@ -29,12 +27,9 @@ class SubscriberConfig:
         address: ZMQ address to subscribe to (e.g., "tcp://localhost:5555")
         timeout_ms: Receive timeout in milliseconds
     """
-from __future__ import annotations
-
 
     address: str = "tcp://localhost:5555"
     timeout_ms: int = 1000
-
 
 @dataclass
 class ControlConfig:
@@ -49,8 +44,6 @@ class ControlConfig:
         max_joint_velocity_rad_s: Maximum joint velocity in rad/s
         safe_position_max_velocity_rad_s: Optional separate velocity limit for safe position movements
     """
-from __future__ import annotations
-
 
     rate_hz: float = 30.0
     timeout_sec: float = 1.0
@@ -62,7 +55,6 @@ from __future__ import annotations
     max_joint_velocity_rad_s: float = 3.14
     safe_position_max_velocity_rad_s: Optional[float] = None
 
-
 @dataclass
 class SimInterfaceConfig:
     """Configuration for simulation interface.
@@ -73,14 +65,11 @@ class SimInterfaceConfig:
         port: Simulation server port
         backend: Optional label for sim backend (e.g., 'ros')
     """
-from __future__ import annotations
-
 
     mode: str = "sim"
     host: str = "localhost"
     port: int = 8080
     backend: Optional[str] = None
-
 
 @dataclass
 class TCPIPProtocolConfig:
@@ -90,12 +79,9 @@ class TCPIPProtocolConfig:
         ip: IP address of the device
         port: Port number
     """
-from __future__ import annotations
-
 
     ip: str = "192.168.1.100"
     port: int = 5001
-
 
 @dataclass
 class RS485ProtocolConfig:
@@ -105,12 +91,9 @@ class RS485ProtocolConfig:
         port: Serial port path (e.g., "/dev/ttyUSB0" or "COM3")
         baud: Baud rate
     """
-from __future__ import annotations
-
 
     port: str = "/dev/ttyUSB0"
     baud: int = 115200
-
 
 @dataclass
 class BaseOffsetConfig:
@@ -124,8 +107,6 @@ class BaseOffsetConfig:
         euler_xyz_deg: Euler angles [roll, pitch, yaw] in degrees (XYZ convention)
         translation_m: Translation [x, y, z] in meters
     """
-from __future__ import annotations
-
 
     euler_xyz_deg: List[float] = field(default_factory=lambda: [0.0, 0.0, 0.0])
     translation_m: List[float] = field(default_factory=lambda: [0.0, 0.0, 0.0])
@@ -136,7 +117,6 @@ from __future__ import annotations
         Returns:
             pin.SE3 transformation matrix
         """
-from __future__ import annotations
 
         # Convert degrees to radians
         euler_rad = np.deg2rad(self.euler_xyz_deg)
@@ -147,17 +127,13 @@ from __future__ import annotations
         # Create SE3 transformation
         return pin.SE3(R, np.array(self.translation_m))
 
-
 # =============================================================================
 # Nova-specific configurations
 # =============================================================================
 
-
 @dataclass
 class NovaRealConfig:
     """Nova-specific real-hardware interface fields."""
-from __future__ import annotations
-
 
     protocol: str = "tcpip"
 
@@ -172,7 +148,6 @@ from __future__ import annotations
 
     def __post_init__(self):
         """Validate Nova protocol (TCP/IP only) and ensure payload exists."""
-from __future__ import annotations
 
         allowed = {"tcpip"}
         if self.protocol not in allowed:
@@ -187,11 +162,9 @@ from __future__ import annotations
 
     def get_connection_info(self) -> Dict[str, Any]:
         """Return a normalized dict describing the connection info."""
-from __future__ import annotations
 
         assert self.tcpip is not None
         return {"type": "tcpip", "ip": self.tcpip.ip, "port": self.tcpip.port}
-
 
 @dataclass
 class NovaConfig:
@@ -199,8 +172,6 @@ class NovaConfig:
 
     All angles are specified in DEGREES for user convenience.
     """
-from __future__ import annotations
-
 
     control_mode: str = "relative_pose"
     handedness: str = "left"  # "left" or "right" - determines tracker name only
@@ -212,7 +183,6 @@ from __future__ import annotations
 
     def __post_init__(self):
         """Validate configuration."""
-from __future__ import annotations
 
         if self.handedness not in ["left", "right"]:
             raise ValueError(
@@ -227,29 +197,23 @@ from __future__ import annotations
     @property
     def home_joints_rad(self) -> np.ndarray:
         """Get home joints in radians."""
-from __future__ import annotations
 
         return np.deg2rad(self.home_joints_deg)
 
     def get_base_placement(self) -> "pin.SE3":
         """Get base placement transformation."""
-from __future__ import annotations
 
         if self.base_offset is None:
             return pin.SE3.Identity()
         return self.base_offset.to_pin_se3()
 
-
 # =============================================================================
 # Inspire-specific configurations
 # =============================================================================
 
-
 @dataclass
 class InspireRealConfig:
     """Inspire-specific real-hardware interface fields."""
-from __future__ import annotations
-
 
     protocol: str = "tcpip"  # 'tcpip' or 'rs485'
 
@@ -276,7 +240,6 @@ from __future__ import annotations
 
     def get_connection_info(self) -> Dict[str, Any]:
         """Return a normalized dict describing the active connection."""
-from __future__ import annotations
 
         if self.protocol == "tcpip":
             assert self.tcpip is not None
@@ -289,12 +252,9 @@ from __future__ import annotations
             "modbus_id": self.modbus_id,
         }
 
-
 @dataclass
 class InspireConfig:
     """Inspire hand-specific configuration."""
-from __future__ import annotations
-
 
     feature_extraction: Dict[str, Any] = field(
         default_factory=lambda: {
@@ -319,17 +279,13 @@ from __future__ import annotations
                 f"InspireConfig.alpha must be a list of 5 floats, got: {self.alpha}"
             )
 
-
 # =============================================================================
 # DH5-specific configurations
 # =============================================================================
 
-
 @dataclass
 class DH5RealConfig:
     """DH5-specific real-hardware interface fields."""
-from __future__ import annotations
-
 
     protocol: str = "rs485"
 
@@ -341,7 +297,6 @@ from __future__ import annotations
 
     def __post_init__(self):
         """Validate DH5 protocol (RS485 only) and ensure payload exists."""
-from __future__ import annotations
 
         allowed = {"rs485"}
         if self.protocol not in allowed:
@@ -356,7 +311,6 @@ from __future__ import annotations
 
     def get_connection_info(self) -> Dict[str, Any]:
         """Return a normalized dict describing the RS485 connection info."""
-from __future__ import annotations
 
         assert self.rs485 is not None
         info: Dict[str, Any] = {
@@ -368,12 +322,9 @@ from __future__ import annotations
             info["modbus_id"] = self.modbus_id
         return info
 
-
 @dataclass
 class DH5Config:
     """DH5 hand-specific configuration."""
-from __future__ import annotations
-
 
     handedness: str = "left"  # "left" or "right"
     feature_extraction: Dict[str, Any] = field(
@@ -393,17 +344,13 @@ from __future__ import annotations
                 f"Invalid handedness for DH5Config: {self.handedness}. Must be 'left' or 'right'"
             )
 
-
 # =============================================================================
 # G1 (Unitree) specific configurations
 # =============================================================================
 
-
 @dataclass
 class G1RealConfig:
     """Unitree G1-specific real-hardware interface fields."""
-from __future__ import annotations
-
 
     protocol: str = "dds"  # DDS communication protocol
     network_interface: str = "enp2s0"  # Network interface for DDS
@@ -414,7 +361,6 @@ from __future__ import annotations
 
     def __post_init__(self):
         """Validate G1 DDS configuration."""
-from __future__ import annotations
 
         if self.protocol != "dds":
             raise ValueError(
@@ -431,7 +377,6 @@ from __future__ import annotations
 
     def get_connection_info(self) -> Dict[str, Any]:
         """Return a normalized dict describing the DDS connection info."""
-from __future__ import annotations
 
         return {
             "type": "dds",
@@ -439,7 +384,6 @@ from __future__ import annotations
             "control_mode_pr": self.control_mode_pr,
             "control_dt": self.control_dt,
         }
-
 
 @dataclass
 class G1Config:
@@ -451,8 +395,6 @@ class G1Config:
     - 29-DOF: 7 DOF per arm (adds wrist_pitch, wrist_yaw)
               Total 14 arm joints, home_joints_deg should have 14 elements
     """
-from __future__ import annotations
-
 
     dof: int = 29  # DOF variant: 23 or 29 (29 includes wrist pitch/yaw)
     control_mode: str = "relative_pose"
@@ -466,7 +408,6 @@ from __future__ import annotations
 
     def __post_init__(self):
         """Validate configuration."""
-from __future__ import annotations
 
         if self.dof not in [23, 29]:
             raise ValueError(f"Invalid dof: {self.dof}. Must be 23 or 29")
@@ -482,30 +423,25 @@ from __future__ import annotations
     @property
     def arm_dof(self) -> int:
         """Get the number of DOF per arm."""
-from __future__ import annotations
 
         return 7 if self.dof == 29 else 5
 
     @property
     def home_joints_rad(self) -> np.ndarray:
         """Get home joints in radians."""
-from __future__ import annotations
 
         return np.deg2rad(self.home_joints_deg)
 
     def get_base_placement(self) -> "pin.SE3":
         """Get base placement transformation."""
-from __future__ import annotations
 
         if self.base_offset is None:
             return pin.SE3(np.eye(3), np.array([0.0, 0.0, 0.75]))
         return self.base_offset.to_pin_se3()
 
-
 # =============================================================================
 # Interface configurations
 # =============================================================================
-
 
 @dataclass
 class RealInterfaceConfig:
@@ -513,8 +449,6 @@ class RealInterfaceConfig:
 
     The `hardware` field selects which nested config must be provided.
     """
-from __future__ import annotations
-
 
     mode: str = "real"
     hardware: str = "nova"  # one of: 'nova', 'dh5', 'inspire', 'unitree_g1'
@@ -546,12 +480,9 @@ from __future__ import annotations
                 "RealInterfaceConfig.hardware='unitree_g1' requires 'g1' field"
             )
 
-
 @dataclass
 class InterfaceConfig:
     """Top-level interface config which discriminates sim vs real."""
-from __future__ import annotations
-
 
     mode: str = "sim"  # 'sim' or 'real'
     sim: Optional[SimInterfaceConfig] = field(default_factory=SimInterfaceConfig)
@@ -577,7 +508,6 @@ from __future__ import annotations
 
     def get_hardware_config(self):
         """Return the nested hardware-specific config for real mode."""
-from __future__ import annotations
 
         if not self.is_real():
             return None
@@ -594,17 +524,13 @@ from __future__ import annotations
             return self.real.g1
         return None
 
-
 # =============================================================================
 # Hand tracking configurations
 # =============================================================================
 
-
 @dataclass
 class CameraConfig:
     """Camera configuration for HandTrackingNode."""
-from __future__ import annotations
-
 
     mode: str = "usb"  # "usb" | "realsense"
     device_index: int = 0
@@ -637,12 +563,9 @@ from __future__ import annotations
         if not is_valid:
             raise ValueError(f"Invalid camera configuration: {error_msg}")
 
-
 @dataclass
 class MediaPipeConfig:
     """MediaPipe Hands configuration."""
-from __future__ import annotations
-
 
     max_hands: int = 2
     min_detection_confidence: float = 0.5
@@ -666,32 +589,23 @@ from __future__ import annotations
         if self.model_complexity not in [0, 1]:
             raise ValueError(f"Invalid model_complexity: {self.model_complexity}")
 
-
 @dataclass
 class EndpointsConfig:
     """ZMQ endpoint configuration for HandTrackingNode."""
-from __future__ import annotations
-
 
     data: str = "tcp://*:5556"
     control: str = "tcp://localhost:5550"
     status: str = "tcp://localhost:5551"
 
-
 @dataclass
 class PublishConfig:
     """Publishing behavior configuration."""
-from __future__ import annotations
-
 
     rate_hz: Optional[float] = None  # None = publish at camera FPS
-
 
 @dataclass
 class HandTrackingConfig:
     """Complete configuration for HandTrackingNode."""
-from __future__ import annotations
-
 
     node_type: str
     node_id: str
@@ -725,17 +639,13 @@ from __future__ import annotations
                 f"Invalid heartbeat_interval: {self.heartbeat_interval}. Must be > 0"
             )
 
-
 # =============================================================================
 # Main control node configuration
 # =============================================================================
 
-
 @dataclass
 class ControlNodeConfig:
     """Complete configuration for a control node."""
-from __future__ import annotations
-
 
     robot_type: str  # "dh5", "nova", "inspire", or "unitree_g1"
 
@@ -751,7 +661,6 @@ from __future__ import annotations
 
     def __post_init__(self):
         """Validate configuration after initialization."""
-from __future__ import annotations
 
         if self.robot_type not in ["dh5", "nova", "inspire", "unitree_g1"]:
             raise ValueError(
@@ -771,7 +680,6 @@ from __future__ import annotations
     @property
     def robot_specific(self):
         """Get robot-specific config based on robot_type."""
-from __future__ import annotations
 
         if self.robot_type == "dh5":
             return self.dh5

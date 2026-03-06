@@ -9,13 +9,11 @@ Date: October 24, 2025
 """
 from __future__ import annotations
 
-
 import time
 from collections import deque
 from typing import Dict
 
 from loguru import logger
-
 
 class RateLimiter:
     """Precise rate limiter for control loops.
@@ -52,8 +50,6 @@ class RateLimiter:
                 print(f"Actual rate: {stats['actual_rate']:.2f}Hz")
                 print(f"Mean jitter: {stats['mean_jitter_ms']:.3f}ms")
     """
-from __future__ import annotations
-
 
     def __init__(self, rate_hz: float):
         """Initialize rate limiter.
@@ -61,7 +57,6 @@ from __future__ import annotations
         Args:
             rate_hz: Target control rate in Hz (e.g., 30.0 for 30Hz)
         """
-from __future__ import annotations
 
         self.rate_hz = rate_hz
         self.target_period = 1.0 / rate_hz
@@ -100,7 +95,6 @@ from __future__ import annotations
             - 'overtime': True if loop took longer than period
             - 'jitter': Deviation from target period (seconds)
         """
-from __future__ import annotations
 
         current_time = time.perf_counter()
         elapsed = current_time - self.last_time
@@ -147,7 +141,6 @@ from __future__ import annotations
 
         Useful for restarting the rate limiter without creating a new instance.
         """
-from __future__ import annotations
 
         current_time = time.perf_counter()
         self.start_time = current_time
@@ -178,7 +171,6 @@ from __future__ import annotations
             - 'efficiency': Percentage of time spent doing work (not sleeping)
             - 'total_elapsed': Total elapsed time (seconds)
         """
-from __future__ import annotations
 
         if self.iterations == 0:
             return {
@@ -230,7 +222,6 @@ from __future__ import annotations
 
     def __repr__(self) -> str:
         """String representation of rate limiter."""
-from __future__ import annotations
 
         stats = self.get_statistics()
         return (

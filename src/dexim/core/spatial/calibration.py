@@ -16,7 +16,6 @@ Date: November 19, 2025
 """
 from __future__ import annotations
 
-
 import json
 from collections.abc import Generator
 from datetime import datetime
@@ -33,49 +32,36 @@ from loguru import logger
 
 from .transform import Transform3D, rigid_transform
 
-
 @runtime_checkable
 class TrackerDataProtocol(Protocol):
     """Protocol for tracker data from parsing."""
-from __future__ import annotations
-
 
     transform: Transform3D
-
 
 @runtime_checkable
 class DataSubscriberProtocol(Protocol):
     """Protocol for data subscribers (e.g., ManusSubscriber)."""
-from __future__ import annotations
-
 
     def receive(self) -> Any:
         """Receive data from subscriber."""
-from __future__ import annotations
 
         ...
 
     def receive_latest(self) -> Any:
         """Receive latest data from subscriber."""
-from __future__ import annotations
 
         ...
-
 
 @runtime_checkable
 class TrackerParserProtocol(Protocol):
     """Protocol for tracker data parsers."""
-from __future__ import annotations
-
 
     def parse_tracker_by_type(
         self, data: Any, tracker_type: str
     ) -> TrackerDataProtocol | None:
         """Parse tracker data by type."""
-from __future__ import annotations
 
         ...
-
 
 def calibrate_world(
     origin: Transform3D, x_point: Transform3D, y_point: Transform3D
@@ -95,7 +81,6 @@ def calibrate_world(
     Returns:
         4x4 transformation matrix (world to tracker base)
     """
-from __future__ import annotations
 
     # Measured points in tracker frame
     measured_origin = origin.position
@@ -135,7 +120,6 @@ from __future__ import annotations
 
     return wM_base
 
-
 def save_world_calibration(
     matrix: npt.NDArray,
     output_dir: Path = Path("calibrations"),
@@ -156,7 +140,6 @@ def save_world_calibration(
     Returns:
         Path to saved calibration file
     """
-from __future__ import annotations
 
     # Create output directory
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -188,7 +171,6 @@ from __future__ import annotations
     logger.success(f"World calibration saved to: {filepath}")
     return filepath
 
-
 def load_world_calibration(calib_dir: Path = Path("calibrations")) -> npt.NDArray:
     """
     Load world calibration matrix from JSON file.
@@ -202,7 +184,6 @@ def load_world_calibration(calib_dir: Path = Path("calibrations")) -> npt.NDArra
     Raises:
         FileNotFoundError: If calibration file not found
     """
-from __future__ import annotations
 
     if not calib_dir.exists():
         raise FileNotFoundError(f"Calibration directory not found: {calib_dir}")
@@ -220,7 +201,6 @@ from __future__ import annotations
     matrix = np.array(data["world_to_tracker"])
     return matrix
 
-
 def calibrate_world_interactive(
     subscriber: DataSubscriberProtocol,
     parser: TrackerParserProtocol,
@@ -237,7 +217,6 @@ def calibrate_world_interactive(
     Returns:
         Tuple of (calibration_matrix, reference_points, measured_points)
     """
-from __future__ import annotations
 
     logger.info("Starting interactive world frame calibration...")
     logger.info("You will be asked to position the tracker at 3 reference points.")
@@ -307,7 +286,6 @@ from __future__ import annotations
 
     return wM_base, ref_points, meas_points
 
-
 def calibrate_world_iter(
     subscriber: DataSubscriberProtocol,
     parser: TrackerParserProtocol,
@@ -338,7 +316,6 @@ def calibrate_world_iter(
         ...         # Display captured transform
         ...         print(f"Captured: {transform.position}")
     """
-from __future__ import annotations
 
     logger.info("Starting iterator-based world frame calibration...")
 
@@ -406,11 +383,9 @@ from __future__ import annotations
 
     return wM_base, ref_points, meas_points
 
-
 # ============================================================================
 # Backward compatibility aliases for Nova tracker calibration
 # ============================================================================
-
 
 def calibrate_nova_tracker(
     origin: Transform3D, x_point: Transform3D, y_point: Transform3D
@@ -429,7 +404,6 @@ def calibrate_nova_tracker(
     Returns:
         4x4 transformation matrix (world to tracker base)
     """
-from __future__ import annotations
 
     import warnings
 
@@ -439,7 +413,6 @@ from __future__ import annotations
         stacklevel=2,
     )
     return calibrate_world(origin, x_point, y_point)
-
 
 def save_calibration(
     matrix: npt.NDArray,
@@ -464,7 +437,6 @@ def save_calibration(
     Returns:
         Path to saved calibration file
     """
-from __future__ import annotations
 
     import warnings
 
@@ -504,7 +476,6 @@ from __future__ import annotations
     logger.success(f"Calibration saved to: {filepath}")
     return filepath
 
-
 def load_calibration(calib_dir: Path = Path("calibrations")) -> npt.NDArray:
     """
     Load calibration matrix from JSON file (Nova naming convention).
@@ -521,7 +492,6 @@ def load_calibration(calib_dir: Path = Path("calibrations")) -> npt.NDArray:
     Raises:
         FileNotFoundError: If calibration file not found
     """
-from __future__ import annotations
 
     import warnings
 
@@ -547,7 +517,6 @@ from __future__ import annotations
     matrix = np.array(data["world_to_tracker"])
     return matrix
 
-
 def calibrate_nova_tracker_interactive(
     subscriber: DataSubscriberProtocol,
     parser: TrackerParserProtocol,
@@ -567,7 +536,6 @@ def calibrate_nova_tracker_interactive(
     Returns:
         Tuple of (calibration_matrix, reference_points, measured_points)
     """
-from __future__ import annotations
 
     import warnings
 

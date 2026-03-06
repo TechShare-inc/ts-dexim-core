@@ -1,6 +1,5 @@
 [build-system]
-requires = ["setuptools>=70"]
-build-backend = "setuptools.backends.legacy:build"
+requires = ["setuptools>=72"]
 
 [project]
 name = "dexim-core"
@@ -18,11 +17,12 @@ dependencies = [
     "pyyaml>=6.0",
     "pyzmq>=25.0.0",
     "scipy>=1.10.0",
+    "viser>=1.0.24",
+    "nlopt>=2.7.0",
 ]
 
-[project.optional-dependencies]
-# viser is pip-installable; pinocchio must be installed via conda (not pip)
-viz = ["viser>=1.0.24"]
+[tool.pyright]
+stubPath = "typings"
 
 [tool.setuptools.packages.find]
 where = ["src"]

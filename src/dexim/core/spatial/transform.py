@@ -1,7 +1,6 @@
 """Spatial transformation utilities for joint transforms and poses."""
 from __future__ import annotations
 
-
 from dataclasses import dataclass
 from typing import Any, Dict, overload
 
@@ -24,44 +23,29 @@ try:
 except ImportError:
     HAS_VISER = False
 
-
 # =================== EXCEPTIONS ===================
-
 
 class SrcDstSizeMismatchError(Exception):
     """Raised when source and destination point sets have different sizes."""
-from __future__ import annotations
-
 
     pass
-
 
 class InvalidPointDimError(Exception):
     """Raised when points have invalid dimensions (not 2D or 3D)."""
-from __future__ import annotations
-
 
     pass
-
 
 class NotEnoughPointsError(Exception):
     """Raised when there are not enough points for transformation calculation."""
-from __future__ import annotations
-
 
     pass
-
 
 class RankDeficiencyError(Exception):
     """Raised when the point set has insufficient rank for transformation."""
-from __future__ import annotations
-
 
     pass
 
-
 # =================== RIGID TRANSFORM FUNCTION ===================
-
 
 def rigid_transform(
     src_pts: np.ndarray, dst_pts: np.ndarray, calc_scale: bool = False
@@ -88,8 +72,6 @@ def rigid_transform(
     t: translation column vector
     scale: scalar, scale=1.0 if calc_scale=False
     """
-from __future__ import annotations
-
 
     dim = src_pts.shape[1]
 
@@ -153,9 +135,7 @@ from __future__ import annotations
 
     return R, t, scale
 
-
 # =================== TRANSFORM3D CLASS ===================
-
 
 @dataclass
 class Transform3D:
@@ -179,17 +159,12 @@ class Transform3D:
         - quat_w: scalar-last quaternion [x, y, z, w]
         - homogeneous: 4x4 transformation matrix
     """
-from __future__ import annotations
-
 
     position: npt.NDArray
     """npt.NDArray: The 3D position vector [x, y, z]."""
-from __future__ import annotations
 
     _rotation: R
     """R: Internal scipy Rotation object (private)."""
-from __future__ import annotations
-
 
     def __init__(
         self,
@@ -263,35 +238,30 @@ from __future__ import annotations
     @property
     def rotation_matrix(self) -> npt.NDArray:
         """Get the 3x3 rotation matrix."""
-from __future__ import annotations
 
         return self._rotation.as_matrix()
 
     @property
     def w_quat(self) -> npt.NDArray:
         """Get quaternion in scalar-first format [w, x, y, z]."""
-from __future__ import annotations
 
         return self._rotation.as_quat(scalar_first=True)
 
     @property
     def quat_w(self) -> npt.NDArray:
         """Get quaternion in scalar-last format [x, y, z, w]."""
-from __future__ import annotations
 
         return self._rotation.as_quat(scalar_first=False)
 
     @property
     def quat(self) -> npt.NDArray:
         """Get quaternion in scalar-first format [w, x, y, z] (alias for w_quat)."""
-from __future__ import annotations
 
         return self.w_quat
 
     @property
     def homogeneous(self) -> npt.NDArray:
         """Get the 4x4 homogeneous transformation matrix."""
-from __future__ import annotations
 
         matrix = np.eye(4)
         matrix[:3, :3] = self.rotation_matrix
@@ -303,7 +273,6 @@ from __future__ import annotations
     @classmethod
     def from_matrix(cls, matrix: npt.NDArray) -> "Transform3D":
         """Create Transform3D from a 4x4 transformation matrix."""
-from __future__ import annotations
 
         if matrix.shape != (4, 4):
             raise ValueError("matrix must be a 4x4 transformation matrix.")
@@ -315,7 +284,6 @@ from __future__ import annotations
 
         Requires pinocchio to be installed.
         """
-from __future__ import annotations
 
         if not HAS_PINOCCHIO:
             raise ImportError(
@@ -328,7 +296,6 @@ from __future__ import annotations
     @classmethod
     def from_json_node(cls, node_data: Dict[str, Any]) -> "Transform3D":
         """Create Transform3D from JSON node data."""
-from __future__ import annotations
 
         pos = node_data["position"]
         rot = node_data["rotation"]
@@ -353,7 +320,6 @@ from __future__ import annotations
         -------
         Transform3D object
         """
-from __future__ import annotations
 
         rotation = R.from_euler("xyz", rpy)
         return cls(position=translation, rotation_matrix=rotation.as_matrix())
@@ -362,7 +328,6 @@ from __future__ import annotations
 
     def __mul__(self, other: "Transform3D") -> "Transform3D":
         """Combine two Transform3D objects (self * other)."""
-from __future__ import annotations
 
         # Combine rotations
         combined_rot = (self._rotation * other._rotation).as_matrix()
@@ -375,7 +340,6 @@ from __future__ import annotations
 
     def inverse(self) -> "Transform3D":
         """Compute the inverse of the Transform3D."""
-from __future__ import annotations
 
         inv_rot = self._rotation.inv()
         inv_pos = -inv_rot.apply(self.position)
@@ -387,7 +351,6 @@ from __future__ import annotations
 
         Computes: result = inv(self) * other
         """
-from __future__ import annotations
 
         inv_self = self.inverse()
         return inv_self * other
@@ -405,7 +368,6 @@ from __future__ import annotations
         Computes: result = oM_self @ inv(oM_src) @ oM_dst
         All inputs are expected to be 4x4 homogeneous transform matrices.
         """
-from __future__ import annotations
 
         if isinstance(local_transform, Transform3D):
             return self * local_transform
@@ -422,7 +384,6 @@ from __future__ import annotations
 
     def to_matrix(self) -> npt.NDArray:
         """Convert the Transform3D to a 4x4 transformation matrix."""
-from __future__ import annotations
 
         return self.homogeneous
 
@@ -431,7 +392,6 @@ from __future__ import annotations
 
         Requires pinocchio to be installed.
         """
-from __future__ import annotations
 
         if not HAS_PINOCCHIO:
             raise ImportError(
@@ -445,7 +405,6 @@ from __future__ import annotations
 
         Requires viser to be installed.
         """
-from __future__ import annotations
 
         if not HAS_VISER:
             raise ImportError(
@@ -456,7 +415,6 @@ from __future__ import annotations
 
     def to_xyzquat(self, scalar_first: bool = False) -> npt.NDArray:
         """Convert the Transform3D to a 7D vector [x, y, z, quat]."""
-from __future__ import annotations
 
         if scalar_first:
             quat = self.w_quat
@@ -468,7 +426,6 @@ from __future__ import annotations
     @staticmethod
     def identity() -> "Transform3D":
         """Return an identity Transform3D."""
-from __future__ import annotations
 
         return Transform3D(
             position=np.zeros(3), w_quat=np.array([1, 0, 0, 0], dtype=float)

@@ -31,7 +31,6 @@ Example:
 """
 from __future__ import annotations
 
-
 import signal
 import time
 from abc import ABC, abstractmethod
@@ -43,73 +42,56 @@ from loguru import logger
 from dexim.core.nodes.managed import ManagedNode
 from dexim.core.nodes.utils import RateLimiter, smootherstep
 
-
 @runtime_checkable
 class DataSubscriber(Protocol):
     """Protocol for data subscribers (e.g., ManusSubscriber)."""
-from __future__ import annotations
-
 
     def read(self) -> dict[str, Any]:
         """Read latest data from the subscriber."""
-from __future__ import annotations
 
         ...
 
     def close(self) -> None:
         """Close the subscriber connection."""
-from __future__ import annotations
 
         ...
-
 
 @runtime_checkable
 class ControlNodeConfig(Protocol):
     """Protocol for control node configuration."""
-from __future__ import annotations
-
 
     robot_type: str
 
     @property
     def control(self) -> Any:
         """Control configuration with rate_hz, timeout_sec, etc."""
-from __future__ import annotations
 
         ...
 
     @property
     def interface(self) -> Any:
         """Interface configuration with mode."""
-from __future__ import annotations
 
         ...
-
 
 @runtime_checkable
 class RobotInterfaceProtocol(Protocol):
     """Protocol for robot interfaces."""
-from __future__ import annotations
-
 
     def read(self) -> Any:
         """Read current robot state."""
-from __future__ import annotations
 
         ...
 
     def write(self, command: Any) -> None:
         """Write command to robot."""
-from __future__ import annotations
 
         ...
 
     def disconnect(self) -> None:
         """Disconnect from robot."""
-from __future__ import annotations
 
         ...
-
 
 class RobotControlNode(ManagedNode, ABC):
     """Abstract base class for robot teleoperation control nodes.
@@ -127,8 +109,6 @@ class RobotControlNode(ManagedNode, ABC):
     - process_data(): Convert sensor data to robot commands
     - get_safe_position(): Define safe fallback position
     """
-from __future__ import annotations
-
 
     def __init__(self, node_id: str, config: ControlNodeConfig):
         """Initialize control node with configuration.
@@ -137,7 +117,6 @@ from __future__ import annotations
             node_id: Unique identifier for this node (e.g., "nova_left", "dh5_right")
             config: Complete control node configuration
         """
-from __future__ import annotations
 
         # Initialize ManagedNode first for ZMQ orchestration
         super().__init__(
@@ -196,7 +175,6 @@ from __future__ import annotations
             self.model = DH5Model(...)
             self.interface = DH5SimInterface(...)
         """
-from __future__ import annotations
 
         pass
 
@@ -223,7 +201,6 @@ from __future__ import annotations
             joint_angles = self.optimizer.retarget(vectors)
             return joint_angles  # np.ndarray
         """
-from __future__ import annotations
 
         pass
 
@@ -240,7 +217,6 @@ from __future__ import annotations
         Example (Nova):
             return self.home_joints  # Home position
         """
-from __future__ import annotations
 
         pass
 
@@ -251,7 +227,6 @@ from __future__ import annotations
         - Set up signal handlers for graceful shutdown
         - Initialize velocity limiting with current joint positions
         """
-from __future__ import annotations
 
         if self._control_loop_initialized:
             return
@@ -293,7 +268,6 @@ from __future__ import annotations
         7. Monitor for timeout
         8. Maintain target control rate
         """
-from __future__ import annotations
 
         # One-time initialization on first iteration
         if not self._control_loop_initialized:
@@ -378,7 +352,6 @@ from __future__ import annotations
 
             Subclasses can access either parsed or raw data as needed.
         """
-from __future__ import annotations
 
         try:
             data = self.subscriber.read()
@@ -398,7 +371,6 @@ from __future__ import annotations
         Returns:
             True if timeout, False otherwise
         """
-from __future__ import annotations
 
         if not self.config.control.safe_position_on_timeout:
             return False
@@ -425,7 +397,6 @@ from __future__ import annotations
             - Falls back gracefully if current position cannot be read
             - Can be disabled via config.control.enable_velocity_limiting
         """
-from __future__ import annotations
 
         # If velocity limiting is disabled, return target directly
         if not self.velocity_limiting_enabled:
@@ -503,7 +474,6 @@ from __future__ import annotations
             - Includes timeout protection to prevent infinite loops
             - Logs progress for movements taking >1 second
         """
-from __future__ import annotations
 
         try:
             # Read current position
@@ -597,7 +567,6 @@ from __future__ import annotations
             Subclasses can override this method to customize safe position behavior.
             Use self._move_to_position_safely() for velocity-limited movement.
         """
-from __future__ import annotations
 
         try:
             safe_joints = self.get_safe_position()
@@ -629,7 +598,6 @@ from __future__ import annotations
         Args:
             joint_cfgs: Joint positions array from process_data()
         """
-from __future__ import annotations
 
         try:
             # Import here to avoid circular dependency and keep base class generic
@@ -652,7 +620,6 @@ from __future__ import annotations
             signum: Signal number
             frame: Current stack frame
         """
-from __future__ import annotations
 
         logger.info(f"Received signal {signum}, shutting down...")
         self.running = False
@@ -669,7 +636,6 @@ from __future__ import annotations
         Subclasses should override to capture reference pose for relative control.
         Call super().on_start() first.
         """
-from __future__ import annotations
 
         logger.info(f"{self.node_id} received START command - teleoperation active")
         # Subclasses override to capture tracker reference pose
@@ -682,7 +648,6 @@ from __future__ import annotations
 
         Subclasses can override to add robot-specific pause logic.
         """
-from __future__ import annotations
 
         logger.info(f"{self.node_id} received PAUSE command - holding position")
         # Hold current position - no movement, ready for quick resume
@@ -695,7 +660,6 @@ from __future__ import annotations
 
         On next START, reference pose will be recaptured.
         """
-from __future__ import annotations
 
         logger.info(f"{self.node_id} received STOP command - going to safe position")
         try:
@@ -710,7 +674,6 @@ from __future__ import annotations
 
         Subclasses can override to add robot-specific recording logic.
         """
-from __future__ import annotations
 
         logger.info(f"{self.node_id} started recording")
         # is_recording flag already set by ManagedNode
@@ -723,7 +686,6 @@ from __future__ import annotations
 
         Subclasses can override to add robot-specific save logic (flush buffers, etc).
         """
-from __future__ import annotations
 
         logger.info(f"{self.node_id} stopped recording")
         # is_recording flag already cleared by ManagedNode
@@ -735,7 +697,6 @@ from __future__ import annotations
         This is triggered by the SHUTDOWN command or signal handler.
         Performs robot-specific cleanup: safe position, disconnect interface, close subscriber.
         """
-from __future__ import annotations
 
         logger.info(f"{self.node_id} received SHUTDOWN command - cleaning up robot")
         self._cleanup_robot()
@@ -751,7 +712,6 @@ from __future__ import annotations
         2. Disconnects interface
         3. Closes subscriber
         """
-from __future__ import annotations
 
         logger.info("Cleaning up robot resources...")
 
@@ -780,13 +740,11 @@ from __future__ import annotations
 
     def __enter__(self):
         """Context manager entry."""
-from __future__ import annotations
 
         self.setup()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit."""
-from __future__ import annotations
 
         self._cleanup_robot()

@@ -4,6 +4,7 @@ VectorOptimizer: Optimization tools for vector-based inverse kinematics.
 This module provides the VectorOptimizer class for retargeting hand keypoints
 to robot joint configurations using nlopt optimization.
 """
+
 from __future__ import annotations
 
 
@@ -48,8 +49,6 @@ class NloptReturn(Enum):
 @dataclass
 class OptimizerConfig:
     """Configuration parameters for the VectorOptimizer."""
-from __future__ import annotations
-
 
     num_of_qs: int = 7
     num_of_features: int = 5
@@ -66,8 +65,6 @@ from __future__ import annotations
 
     def __post_init__(self):
         """Set default joint limits if not provided."""
-from __future__ import annotations
-
         if len(self.alpha) != self.num_of_features:
             self.alpha = [1.0] * self.num_of_features
         if self.lower_bounds is None:
@@ -94,8 +91,6 @@ class VectorOptimizer:
             config (OptimizerConfig): Configuration object containing all optimizer parameters.
                                     If None, default configuration will be used.
         """
-from __future__ import annotations
-
         # Use default config if none provided
         np.set_printoptions(precision=4, suppress=True)
 
@@ -145,8 +140,6 @@ from __future__ import annotations
         """
         Initialize the robot keypoint variables using the model's keypoint targets.
         """
-from __future__ import annotations
-
         # Get keypoint targets from the model
         targets = self.robot.get_keypoint_targets()
 
@@ -168,8 +161,6 @@ from __future__ import annotations
         Returns:
             Configured NLopt optimizer instance.
         """
-from __future__ import annotations
-
         opt = nlopt.opt(nlopt.LD_SLSQP, self.nv)
 
         opt.set_ftol_rel(self.ftol_rel)
@@ -245,8 +236,6 @@ from __future__ import annotations
         Returns:
             Optimal joint configuration
         """
-from __future__ import annotations
-
         start_time = time.time()
         opt = self.create_optimizer()
         opt.set_min_objective(
@@ -316,8 +305,6 @@ from __future__ import annotations
         Returns:
             Objective function value (loss)
         """
-from __future__ import annotations
-
         input_features_tensor = torch.as_tensor(input_features).requires_grad_(False)
 
         # Forward pass: compute robot configuration and positions

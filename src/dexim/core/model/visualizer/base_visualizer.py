@@ -7,7 +7,6 @@ and common visualization patterns.
 """
 from __future__ import annotations
 
-
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -30,7 +29,6 @@ except ImportError as _err:
         "Install it via pip: pip install dexim-core[viz]"
     ) from _err
 
-
 class BaseRobotVisualizer(ABC):
     """
     Abstract base class for robot visualizers using Viser.
@@ -46,8 +44,6 @@ class BaseRobotVisualizer(ABC):
     - _create_geometry_objects(): Create robot geometry visualization
     - _create_frame_visualizations(): Create frame visualizations
     """
-from __future__ import annotations
-
 
     def __init__(
         self,
@@ -69,7 +65,6 @@ from __future__ import annotations
             show_geometry: Whether to show robot geometry (links/joints)
             show_ee_spheres: Whether to show end-effector spheres
         """
-from __future__ import annotations
 
         self.verbose = verbose
         self.logger = logger
@@ -102,7 +97,6 @@ from __future__ import annotations
         This method must be implemented by subclasses to create
         appropriate visual representations for their specific robot type.
         """
-from __future__ import annotations
 
         pass
 
@@ -114,7 +108,6 @@ from __future__ import annotations
         This method must be implemented by subclasses to create
         frame visualizations specific to their robot type.
         """
-from __future__ import annotations
 
         pass
 
@@ -129,7 +122,6 @@ from __future__ import annotations
         This method must be implemented by subclasses to update
         their specific robot model and visualization.
         """
-from __future__ import annotations
 
         pass
 
@@ -141,7 +133,6 @@ from __future__ import annotations
         Returns:
             Current joint configuration vector
         """
-from __future__ import annotations
 
         pass
 
@@ -153,14 +144,12 @@ from __future__ import annotations
         Returns:
             Dictionary mapping frame names to SE3 poses
         """
-from __future__ import annotations
 
         pass
 
     @abstractmethod
     def reset_to_neutral(self) -> None:
         """Reset robot to neutral configuration."""
-from __future__ import annotations
 
         pass
 
@@ -168,14 +157,12 @@ from __future__ import annotations
     @property
     def show_frames(self) -> bool:
         """Whether end-effector frames are visible."""
-from __future__ import annotations
 
         return self._show_frames
 
     @show_frames.setter
     def show_frames(self, visible: bool) -> None:
         """Set visibility of end-effector frames."""
-from __future__ import annotations
 
         if self._show_frames == visible:
             return
@@ -192,14 +179,12 @@ from __future__ import annotations
     @property
     def show_geometry(self) -> bool:
         """Whether robot geometry is visible."""
-from __future__ import annotations
 
         return self._show_geometry
 
     @show_geometry.setter
     def show_geometry(self, visible: bool) -> None:
         """Set visibility of robot geometry."""
-from __future__ import annotations
 
         if self._show_geometry == visible:
             return
@@ -216,14 +201,12 @@ from __future__ import annotations
     @property
     def show_ee_spheres(self) -> bool:
         """Whether end-effector spheres are visible."""
-from __future__ import annotations
 
         return self._show_ee_spheres
 
     @show_ee_spheres.setter
     def show_ee_spheres(self, visible: bool) -> None:
         """Set visibility of end-effector spheres."""
-from __future__ import annotations
 
         if self._show_ee_spheres == visible:
             return
@@ -236,25 +219,21 @@ from __future__ import annotations
 
     def toggle_frames(self) -> None:
         """Toggle visibility of end-effector frames."""
-from __future__ import annotations
 
         self.show_frames = not self.show_frames
 
     def toggle_geometry(self) -> None:
         """Toggle visibility of robot geometry."""
-from __future__ import annotations
 
         self.show_geometry = not self.show_geometry
 
     def toggle_ee_spheres(self) -> None:
         """Toggle visibility of end-effector spheres."""
-from __future__ import annotations
 
         self.show_ee_spheres = not self.show_ee_spheres
 
     def show_all(self) -> None:
         """Show all visualization components."""
-from __future__ import annotations
 
         self.show_frames = True
         self.show_geometry = True
@@ -265,7 +244,6 @@ from __future__ import annotations
 
     def hide_all(self) -> None:
         """Hide all visualization components."""
-from __future__ import annotations
 
         self.show_frames = False
         self.show_geometry = False
@@ -276,7 +254,6 @@ from __future__ import annotations
 
     def get_visibility_status(self) -> dict[str, bool]:
         """Get current visibility status of all components."""
-from __future__ import annotations
 
         return {
             "frames": self._show_frames,
@@ -291,12 +268,9 @@ from __future__ import annotations
         Args:
             feature_vectors: Dictionary mapping frame names to 3D feature vectors.
         """
-from __future__ import annotations
-
 
     def close(self) -> None:
         """Close the visualizer and clean up resources."""
-from __future__ import annotations
 
         # Clear handles
         self.frame_handles.clear()
@@ -313,22 +287,18 @@ from __future__ import annotations
 
     def __enter__(self):
         """Context manager entry."""
-from __future__ import annotations
 
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit."""
-from __future__ import annotations
 
         self.close()
 
     @abstractmethod
     def __repr__(self) -> str:
         """String representation of the visualizer."""
-from __future__ import annotations
 
         pass
-
 
 __all__ = ["BaseRobotVisualizer"]

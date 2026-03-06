@@ -12,7 +12,7 @@ def smootherstep(t: float) -> float:
     and acceleration at the boundaries (t=0 and t=1), making it ideal
     for robot motion profiles.
 
-    Formula: 6t⁵ − 15t⁴ + 10t³  (Ken Perlin's improved smoothstep)
+    Formula: 6t⁵ - 15t⁴ + 10t³  (Ken Perlin's improved smoothstep)
 
     Args:
         t: Linear interpolation parameter in [0, 1].

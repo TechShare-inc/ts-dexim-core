@@ -24,7 +24,15 @@ conda install conda-forge::uv
 conda install conda-forge::pinocchio
 ```
 
-4. Install all project dependencies with `uv pip`:
+4. Install PyTorch (CUDA 13.0) — **not managed by `pyproject.toml`**, install manually:
+
+```bash
+pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu130
+```
+
+> For other CUDA versions or CPU-only builds, see https://pytorch.org/get-started/locally/
+
+5. Install all project dependencies with `uv pip`:
 
 ```bash
 uv pip install -e .

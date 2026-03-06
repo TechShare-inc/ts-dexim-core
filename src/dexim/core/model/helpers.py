@@ -6,10 +6,8 @@ in URDF files.
 """
 from __future__ import annotations
 
-
 import os
 import re
-
 
 def replace_package_url_in_content(
     content: str, package_dir: str, description_name: str | None = None
@@ -29,7 +27,6 @@ def replace_package_url_in_content(
     Returns:
         Modified content with normalized file URLs.
     """
-from __future__ import annotations
 
     abs_package_dir = os.path.abspath(package_dir)
 
@@ -67,6 +64,5 @@ from __future__ import annotations
     content = url_attr_pattern.sub(_replace_bare_attr, content)
 
     return content
-
 
 __all__ = ["replace_package_url_in_content"]

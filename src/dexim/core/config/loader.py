@@ -5,7 +5,6 @@ configuration files.
 """
 from __future__ import annotations
 
-
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Dict, Union
@@ -38,7 +37,6 @@ from .base import (
     HandTrackingConfig,
 )
 
-
 def load_config(
     yaml_path: str,
 ) -> Union[ControlNodeConfig, HandTrackingConfig]:
@@ -56,7 +54,6 @@ def load_config(
         FileNotFoundError: If config file doesn't exist
         ValueError: If config is invalid
     """
-from __future__ import annotations
 
     config_path = Path(yaml_path)
 
@@ -87,7 +84,6 @@ from __future__ import annotations
         )
         return config
 
-
 def _parse_interface(
     interface_dict: Dict[str, Any], robot_type: str
 ) -> InterfaceConfig:
@@ -100,7 +96,6 @@ def _parse_interface(
     Returns:
         InterfaceConfig instance
     """
-from __future__ import annotations
 
     if not interface_dict:
         return InterfaceConfig()
@@ -217,7 +212,6 @@ from __future__ import annotations
 
     raise ValueError("interface.mode must be 'sim' or 'real'")
 
-
 def _dict_to_control_config(config_dict: Dict[str, Any]) -> ControlNodeConfig:
     """Convert dictionary to ControlNodeConfig.
 
@@ -227,7 +221,6 @@ def _dict_to_control_config(config_dict: Dict[str, Any]) -> ControlNodeConfig:
     Returns:
         ControlNodeConfig: Parsed configuration
     """
-from __future__ import annotations
 
     robot_type = config_dict.get("robot_type")
     if not robot_type:
@@ -277,7 +270,6 @@ from __future__ import annotations
         g1=g1_config,
     )
 
-
 def _dict_to_hand_tracking_config(config_dict: Dict[str, Any]) -> HandTrackingConfig:
     """Convert dictionary to HandTrackingConfig.
 
@@ -287,7 +279,6 @@ def _dict_to_hand_tracking_config(config_dict: Dict[str, Any]) -> HandTrackingCo
     Returns:
         HandTrackingConfig: Parsed configuration
     """
-from __future__ import annotations
 
     node_type = config_dict.get("node_type")
     if node_type != "hand_tracking":
@@ -314,7 +305,6 @@ from __future__ import annotations
         heartbeat_interval=heartbeat_interval,
     )
 
-
 def merge_config(
     base_config: ControlNodeConfig, overrides: Dict[str, Any]
 ) -> ControlNodeConfig:
@@ -331,7 +321,6 @@ def merge_config(
         >>> config = load_config("config.yaml")
         >>> config = merge_config(config, {"interface.port": 9090})
     """
-from __future__ import annotations
 
     logger.debug(f"Merging {len(overrides)} configuration overrides")
 
@@ -341,7 +330,6 @@ from __future__ import annotations
 
     return base_config
 
-
 def _set_nested_attr(obj: Any, key: str, value: Any):
     """Set nested attribute using dot notation.
 
@@ -350,7 +338,6 @@ def _set_nested_attr(obj: Any, key: str, value: Any):
         key: Attribute path (e.g., "interface.port")
         value: Value to set
     """
-from __future__ import annotations
 
     parts = key.split(".")
 
@@ -358,7 +345,6 @@ from __future__ import annotations
         obj = getattr(obj, part)
 
     setattr(obj, parts[-1], value)
-
 
 def validate_config(config: Union[ControlNodeConfig, HandTrackingConfig]) -> bool:
     """Validate configuration for common issues.
@@ -372,7 +358,6 @@ def validate_config(config: Union[ControlNodeConfig, HandTrackingConfig]) -> boo
     Raises:
         ValueError: If configuration is invalid
     """
-from __future__ import annotations
 
     if isinstance(config, HandTrackingConfig):
         if config.node_type != "hand_tracking":
@@ -417,7 +402,6 @@ from __future__ import annotations
     logger.success("Configuration validation passed")
     return True
 
-
 def save_config(config: ControlNodeConfig, yaml_path: str):
     """Save configuration to YAML file.
 
@@ -425,7 +409,6 @@ def save_config(config: ControlNodeConfig, yaml_path: str):
         config: Configuration to save
         yaml_path: Path to save YAML file
     """
-from __future__ import annotations
 
     config_dict = config_to_dict(config)
 
@@ -437,7 +420,6 @@ from __future__ import annotations
 
     logger.success(f"Configuration saved to {yaml_path}")
 
-
 def config_to_dict(config: ControlNodeConfig) -> Dict[str, Any]:
     """Convert ControlNodeConfig to dictionary.
 
@@ -447,10 +429,8 @@ def config_to_dict(config: ControlNodeConfig) -> Dict[str, Any]:
     Returns:
         Dictionary representation
     """
-from __future__ import annotations
 
     return asdict(config)
-
 
 # Alias for backward compatibility
 _dict_to_config = _dict_to_control_config

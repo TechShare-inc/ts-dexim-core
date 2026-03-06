@@ -26,12 +26,10 @@ Example usage:
 """
 from __future__ import annotations
 
-
 from dataclasses import dataclass
 from typing import Optional, Tuple
 import socket
 import re
-
 
 # =============================================================================
 # Port Constants
@@ -54,7 +52,6 @@ SIM_PORT_RANGE: Tuple[int, int] = (8071, 8099)
 DEFAULT_HOST: str = "localhost"
 BIND_ALL_INTERFACES: str = "*"
 
-
 # =============================================================================
 # Well-Known Node Data Ports
 # =============================================================================
@@ -75,11 +72,9 @@ NODE_DATA_PORTS: dict[str, int] = {
     "gripper_right": 5567,
 }
 
-
 # =============================================================================
 # Dataclasses
 # =============================================================================
-
 
 @dataclass
 class NodePorts:
@@ -90,8 +85,6 @@ class NodePorts:
         status: Port for status plane (default: 5551)
         data: Port for data plane (optional, depends on node type)
     """
-from __future__ import annotations
-
 
     control: int = CONTROL_PORT
     status: int = STATUS_PORT
@@ -99,14 +92,12 @@ from __future__ import annotations
 
     def with_data_port(self, data_port: int) -> "NodePorts":
         """Return a new NodePorts with the specified data port."""
-from __future__ import annotations
 
         return NodePorts(
             control=self.control,
             status=self.status,
             data=data_port,
         )
-
 
 @dataclass
 class EndpointConfig:
@@ -117,8 +108,6 @@ class EndpointConfig:
         status: Status plane endpoint (e.g., "tcp://localhost:5551")
         data: Data plane endpoint (e.g., "tcp://*:5555" for bind, "tcp://localhost:5555" for connect)
     """
-from __future__ import annotations
-
 
     control: str
     status: str
@@ -145,7 +134,6 @@ from __future__ import annotations
         Returns:
             EndpointConfig with properly formatted ZMQ endpoint strings
         """
-from __future__ import annotations
 
         data_host = BIND_ALL_INTERFACES if bind_data else host
         return cls(
@@ -174,7 +162,6 @@ from __future__ import annotations
         Raises:
             KeyError: If node_type is not in NODE_DATA_PORTS
         """
-from __future__ import annotations
 
         if node_type not in NODE_DATA_PORTS:
             available = ", ".join(sorted(NODE_DATA_PORTS.keys()))
@@ -189,7 +176,6 @@ from __future__ import annotations
 
     def to_dict(self) -> dict[str, str]:
         """Convert to dictionary (useful for YAML config generation)."""
-from __future__ import annotations
 
         return {
             "control": self.control,
@@ -197,11 +183,9 @@ from __future__ import annotations
             "data": self.data,
         }
 
-
 # =============================================================================
 # Port Allocation Functions
 # =============================================================================
-
 
 def get_data_port(node_index: int) -> int:
     """Get data port for a node by index (0-based).
@@ -218,10 +202,8 @@ def get_data_port(node_index: int) -> int:
         >>> get_data_port(2)
         5557
     """
-from __future__ import annotations
 
     return DATA_PORT_BASE + node_index
-
 
 def get_node_data_port(node_type: str) -> int:
     """Get the well-known data port for a node type.
@@ -235,20 +217,17 @@ def get_node_data_port(node_type: str) -> int:
     Raises:
         KeyError: If node_type is not registered
     """
-from __future__ import annotations
 
     if node_type not in NODE_DATA_PORTS:
         available = ", ".join(sorted(NODE_DATA_PORTS.keys()))
         raise KeyError(f"Unknown node type '{node_type}'. Available types: {available}")
     return NODE_DATA_PORTS[node_type]
 
-
 # =============================================================================
 # Endpoint Parsing Functions
 # =============================================================================
 
 _ENDPOINT_PATTERN = re.compile(r"^tcp://([^:]+):(\d+)$")
-
 
 def parse_endpoint(endpoint: str) -> Tuple[str, int]:
     """Parse a ZMQ endpoint string to extract host and port.
@@ -268,7 +247,6 @@ def parse_endpoint(endpoint: str) -> Tuple[str, int]:
         >>> parse_endpoint("tcp://*:5555")
         ('*', 5555)
     """
-from __future__ import annotations
 
     match = _ENDPOINT_PATTERN.match(endpoint)
     if not match:
@@ -280,7 +258,6 @@ from __future__ import annotations
     port = int(match.group(2))
     return host, port
 
-
 def build_endpoint(host: str, port: int) -> str:
     """Build a ZMQ endpoint string from host and port.
 
@@ -291,15 +268,12 @@ def build_endpoint(host: str, port: int) -> str:
     Returns:
         ZMQ endpoint string (e.g., "tcp://localhost:5550")
     """
-from __future__ import annotations
 
     return f"tcp://{host}:{port}"
-
 
 # =============================================================================
 # Port Validation Functions
 # =============================================================================
-
 
 def is_port_available(port: int, host: str = "127.0.0.1") -> bool:
     """Check if a port is available for binding.
@@ -311,7 +285,6 @@ def is_port_available(port: int, host: str = "127.0.0.1") -> bool:
     Returns:
         True if the port is available, False otherwise
     """
-from __future__ import annotations
 
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -320,7 +293,6 @@ from __future__ import annotations
             return True
     except OSError:
         return False
-
 
 def is_valid_port(port: int) -> bool:
     """Check if a port number is valid (1-65535).
@@ -331,10 +303,8 @@ def is_valid_port(port: int) -> bool:
     Returns:
         True if port is in valid range
     """
-from __future__ import annotations
 
     return 1 <= port <= 65535
-
 
 def is_data_port_in_range(port: int) -> bool:
     """Check if a port is within the designated data port range.
@@ -345,10 +315,8 @@ def is_data_port_in_range(port: int) -> bool:
     Returns:
         True if port is within DATA_PORT_RANGE
     """
-from __future__ import annotations
 
     return DATA_PORT_RANGE[0] <= port <= DATA_PORT_RANGE[1]
-
 
 def find_available_port(
     start: int = DATA_PORT_BASE,
@@ -365,13 +333,11 @@ def find_available_port(
     Returns:
         First available port, or None if no port is available
     """
-from __future__ import annotations
 
     for port in range(start, end + 1):
         if is_port_available(port, host):
             return port
     return None
-
 
 # =============================================================================
 # Default Endpoint Strings (for backward compatibility)

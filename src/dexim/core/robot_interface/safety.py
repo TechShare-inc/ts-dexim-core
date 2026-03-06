@@ -9,13 +9,11 @@ Date: October 24, 2025
 """
 from __future__ import annotations
 
-
 import time
 from typing import Dict, Optional
 
 import numpy as np
 from loguru import logger
-
 
 class SafetyMonitor:
     """Safety monitoring for robot teleoperation.
@@ -55,8 +53,6 @@ class SafetyMonitor:
         report = monitor.get_violation_report()
         print(f"Timeouts: {report['timeout_count']}")
     """
-from __future__ import annotations
-
 
     def __init__(
         self,
@@ -71,7 +67,6 @@ from __future__ import annotations
             joint_limits: Nx2 array of [min, max] for each joint (radians or meters)
             velocity_limits: N array of max velocities (rad/s or m/s)
         """
-from __future__ import annotations
 
         self.timeout_sec = timeout_sec
         self.last_data_time = time.time()
@@ -101,7 +96,6 @@ from __future__ import annotations
 
         Call this after successfully receiving and processing data.
         """
-from __future__ import annotations
 
         self.last_data_time = time.time()
 
@@ -111,7 +105,6 @@ from __future__ import annotations
         Returns:
             True if timeout exceeded (time since last data > timeout_sec)
         """
-from __future__ import annotations
 
         elapsed = time.time() - self.last_data_time
         if elapsed > self.timeout_sec:
@@ -132,7 +125,6 @@ from __future__ import annotations
         Returns:
             True if all joints within limits
         """
-from __future__ import annotations
 
         if self.joint_limits is None:
             return True
@@ -173,7 +165,6 @@ from __future__ import annotations
         Returns:
             True if all velocities within limits
         """
-from __future__ import annotations
 
         if self.velocity_limits is None:
             return True
@@ -225,7 +216,6 @@ from __future__ import annotations
         Returns:
             True if command passes all safety checks
         """
-from __future__ import annotations
 
         self.total_validations += 1
 
@@ -258,7 +248,6 @@ from __future__ import annotations
             - 'total_violations': Sum of all violations
             - 'violation_rate': Percentage of validations that failed
         """
-from __future__ import annotations
 
         total_violations = (
             self.timeout_count + self.limit_violations + self.velocity_violations
@@ -284,7 +273,6 @@ from __future__ import annotations
 
         Useful for starting a new monitoring session without creating a new instance.
         """
-from __future__ import annotations
 
         self.timeout_count = 0
         self.limit_violations = 0
@@ -294,7 +282,6 @@ from __future__ import annotations
 
     def __repr__(self) -> str:
         """String representation of safety monitor."""
-from __future__ import annotations
 
         report = self.get_violation_report()
         return (

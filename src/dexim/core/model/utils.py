@@ -6,7 +6,6 @@ handling package:// URL replacement automatically.
 """
 from __future__ import annotations
 
-
 import os
 import tempfile
 from pathlib import Path
@@ -20,7 +19,6 @@ except ImportError as _err:
     ) from _err
 
 from .helpers import replace_package_url_in_content
-
 
 def load_urdf_model(
     packages_dir: str | Path,
@@ -53,7 +51,6 @@ def load_urdf_model(
     Example:
         >>> model = load_urdf_model("assets", "inspire_hand_l", "inspire_hand_l.urdf")
     """
-from __future__ import annotations
 
     # Convert to Path for consistent handling
     packages_dir = Path(packages_dir)
@@ -99,7 +96,6 @@ from __future__ import annotations
 
     return model
 
-
 def load_urdf_models(
     packages_dir: str | Path,
     description_name: str,
@@ -136,7 +132,6 @@ def load_urdf_models(
         ...     mimic=True
         ... )
     """
-from __future__ import annotations
 
     # Convert to Path for consistent handling
     packages_dir = Path(packages_dir)
@@ -185,6 +180,5 @@ from __future__ import annotations
         os.unlink(temp_urdf_path)
 
     return model, collision_model, visual_model
-
 
 __all__ = ["load_urdf_model", "load_urdf_models"]

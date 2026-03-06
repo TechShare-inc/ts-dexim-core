@@ -6,7 +6,6 @@ for all hand robot models (DH5, Inspire, Generic, etc.).
 """
 from __future__ import annotations
 
-
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
@@ -22,7 +21,6 @@ except ImportError as _err:
 
 if TYPE_CHECKING:
     from dexim.core.model.optimizer import VectorOptimizer
-
 
 class BaseHandModel(ABC):
     """
@@ -50,8 +48,6 @@ class BaseHandModel(ABC):
         valid_frame_names: List of valid frame names
         tip_frame_names: List of tip frame names
     """
-from __future__ import annotations
-
 
     # Core Pinocchio structures - must be initialized by subclasses
     model: pin.Model
@@ -74,7 +70,6 @@ from __future__ import annotations
     @abstractmethod
     def __init__(self, **kwargs):
         """Initialize the hand model. Must be implemented by subclasses."""
-from __future__ import annotations
 
         pass
 
@@ -92,7 +87,6 @@ from __future__ import annotations
         Raises:
             ValueError: If frame name is not found
         """
-from __future__ import annotations
 
         pass
 
@@ -105,7 +99,6 @@ from __future__ import annotations
             List of tuples containing (source_frame, destination_frame) pairs
             representing the finger segments to track (e.g., MCP to tip)
         """
-from __future__ import annotations
 
         pass
 
@@ -119,7 +112,6 @@ from __future__ import annotations
         Returns:
             SE3 pose of the frame
         """
-from __future__ import annotations
 
         frame_id = self.get_frame_id(frame_name)
         return self.data.oMf[frame_id]
@@ -134,7 +126,6 @@ from __future__ import annotations
         Returns:
             3D position vector
         """
-from __future__ import annotations
 
         return self.get_frame_pose(frame_name).translation
 
@@ -145,7 +136,6 @@ from __future__ import annotations
         Returns:
             List of joint names
         """
-from __future__ import annotations
 
         return [self.model.names[i] for i in range(1, self.model.njoints)]
 
@@ -156,7 +146,6 @@ from __future__ import annotations
         Returns:
             List of frame names
         """
-from __future__ import annotations
 
         return self.valid_frame_names
 
@@ -167,7 +156,6 @@ from __future__ import annotations
         Returns:
             Tuple of (lower_limits, upper_limits) in radians
         """
-from __future__ import annotations
 
         return (
             self.model.lowerPositionLimit.copy(),
@@ -176,7 +164,6 @@ from __future__ import annotations
 
     def print_model_info(self) -> None:
         """Print detailed information about the model."""
-from __future__ import annotations
 
         print(f"\n=== {self.__class__.__name__} Information ===")
         print(f"Degrees of freedom: {self.model.nq}")
