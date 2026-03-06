@@ -177,8 +177,10 @@ class VectorOptimizer:
         current_time = time.time()
 
         q_init = self.q_last.copy()
+        q_optimal = q_init.copy()
         reason = NloptReturn.FAILURE
 
+        iter = 0
         for iter in range(self.MAX_ITER):
             self.logger.debug(f"Optimization iteration {iter+1}/{self.MAX_ITER}")
 

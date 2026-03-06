@@ -21,6 +21,7 @@ pip-wheel-metadata/
 venv/
 env/
 ENV/
+.pixi/
 
 # Test and coverage outputs
 .pytest_cache/
