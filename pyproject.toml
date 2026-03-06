@@ -1,0 +1,17 @@
+[project]
+name = "dexim-core"
+version = "0.1.0"
+description = "DexImitate core framework modules consolidated into one package"
+readme = "README.md"
+authors = [
+    { name = "haoyan.li", email = "haoyan.li@techshare.co.jp" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "loguru>=0.7.0",
+    "msgpack>=1.0.0",
+    "numpy>=1.24.0",
+    "pyyaml>=6.0",
+    "pyzmq>=25.0.0",
+    "scipy>=1.10.0",
+]
