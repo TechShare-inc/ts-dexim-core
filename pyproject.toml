@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=70"]
+build-backend = "setuptools.backends.legacy:build"
+
 [project]
 name = "dexim-core"
 version = "0.1.0"
@@ -15,3 +19,12 @@ dependencies = [
     "pyzmq>=25.0.0",
     "scipy>=1.10.0",
 ]
+
+[project.optional-dependencies]
+# viser is pip-installable; pinocchio must be installed via conda (not pip)
+viz = ["viser>=1.0.24"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+# Enable namespace package discovery so dexim.core co-exists with dexim.nova etc.
+namespaces = true
