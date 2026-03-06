@@ -307,7 +307,7 @@ packages:
 - pypi: ./
   name: dexim-core
   version: 0.1.0
-  sha256: 438dc58b8b6ce74d9daa97cbea91ca393f723d022fa195030d1686e8f7602a37
+  sha256: 788005582a1163f5f5a582c9ce533e93132bb3143bc21acc39762751e9f07c28
   requires_dist:
   - loguru>=0.7.0
   - msgpack>=1.0.0

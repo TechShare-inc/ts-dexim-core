@@ -28,3 +28,21 @@ stubPath = "typings"
 where = ["src"]
 # Enable namespace package discovery so dexim.core co-exists with dexim.nova etc.
 namespaces = true
+
+[tool.pixi.workspace]
+name = "dexim-core"
+channels = ["conda-forge"]
+# Keep local development solve scoped to the current platform.
+platforms = ["win-64"]
+
+[tool.pixi.dependencies]
+python = "3.10.*"
+pip = ">=24"
+pinocchio = ">=3.7.0"
+
+[tool.pixi.pypi-dependencies]
+# Install current package in editable mode inside the Pixi environment.
+dexim-core = { path = ".", editable = true }
+
+[tool.pixi.tasks]
+check-import = "python -c \"import pinocchio; import dexim.core; print('pinocchio + dexim.core import ok')\""
