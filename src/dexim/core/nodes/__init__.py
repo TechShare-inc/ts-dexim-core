@@ -40,8 +40,8 @@ Example:
     with DH5ControlNode("dh5_left", config) as node:
         node.run()
 """
-from __future__ import annotations
 
+from __future__ import annotations
 
 # Base node classes
 from dexim.core.nodes.arm_teleop_node import ArmTeleopNode
@@ -73,6 +73,9 @@ from dexim.core.nodes.recorder_node import RecorderNode
 # Teleop node hierarchy
 from dexim.core.nodes.teleop_node import TeleopNode
 
+# Generic typed subscriber (hardware-agnostic replacement for device subscribers)
+from dexim.core.nodes.topic_subscriber import TopicSubscriber
+
 # Utilities
 from dexim.core.nodes.utils.rate_limiter import RateLimiter
 
@@ -95,6 +98,7 @@ __all__ = [
     "NodeStatus",
     # Protocols
     "DataSubscriber",
+    "TopicSubscriber",
     "ControlNodeConfig",
     "RobotInterfaceProtocol",
     "RobotModelProtocol",

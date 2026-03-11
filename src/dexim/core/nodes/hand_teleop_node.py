@@ -36,8 +36,6 @@ from abc import abstractmethod
 from typing import Any
 
 import numpy as np
-from loguru import logger
-
 from dexim.core.nodes.protocols import (
     DEFAULT_SENSOR_WAIT_CONFIG,
     ControlNodeConfig,
@@ -45,6 +43,7 @@ from dexim.core.nodes.protocols import (
     VectorOptimizerProtocol,
 )
 from dexim.core.nodes.teleop_node import TeleopNode
+from loguru import logger
 
 
 class HandTeleopNode(TeleopNode):
@@ -52,7 +51,6 @@ class HandTeleopNode(TeleopNode):
 
     This class extends TeleopNode with hand-specific features:
     - Skeleton data parsing and handedness selection
-    - Feature extraction from skeleton (finger vectors)
     - Vector optimization for joint angles
     - No reference pose capture needed
     - Landscape-based sensor waiting with configurable timeout
@@ -62,6 +60,7 @@ class HandTeleopNode(TeleopNode):
     - process_data(): Extract features and optimize
     - get_safe_position(): Return open hand position (zeros)
     - _get_feature_config(): Return feature extraction configuration
+    - _extract_features(): Extract feature vectors from skeleton data
 
     Attributes:
         optimizer: Vector optimizer for retargeting (VectorOptimizerProtocol)
@@ -305,58 +304,6 @@ class HandTeleopNode(TeleopNode):
             f"0x{expected_glove_id_int:X} ({expected_glove_id_int})"
         )
         return None
-
-    def _extract_features(self, skeleton: Any) -> np.ndarray | None:
-        """Extract feature vectors from skeleton data.
-
-        Args:
-            skeleton: ManusSkeletonData object
-
-        Returns:
-            Feature vectors array (num_fingers, 3), or None if extraction fails
-
-        Note:
-            Uses ManusFeatureExtractor.extract_position_vectors() with
-            configuration from _get_feature_config().
-        """
-        if skeleton is None:
-            return None
-
-        try:
-            from manus_subscriber import ManusFeatureExtractor
-
-            config = self._get_feature_config()
-
-            vectors = ManusFeatureExtractor.extract_position_vectors(
-                skeleton,
-                src_indices=config.get("src_indices"),
-                dst_indices=config.get("dst_indices"),
-                apply_rotation=config.get("apply_rotation", True),
-            )
-
-            # Convert to numpy array
-            return ManusFeatureExtractor.vectors_to_array(vectors)
-
-        except ImportError:
-            logger.error("manus_subscriber not available for feature extraction")
-            return None
-        except Exception as e:
-            logger.error(f"Feature extraction failed: {e}")
-            return None
-
-    def _scale_features(self, vectors: np.ndarray) -> np.ndarray:
-        """Scale feature vectors using optimizer alpha.
-
-        Args:
-            vectors: Raw feature vectors (num_fingers, 3)
-
-        Returns:
-            Scaled feature vectors
-        """
-        if hasattr(self.optimizer, "alpha"):
-            alpha = np.array(self.optimizer.alpha)
-            return vectors * alpha[:, np.newaxis]
-        return vectors
 
     # ----------------------
     # Default implementations

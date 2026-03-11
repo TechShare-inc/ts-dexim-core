@@ -13,10 +13,9 @@ import time
 from typing import Any
 
 import zmq
-from loguru import logger
 from dexim.core.messages import pack_data_message
-
 from dexim.core.nodes.managed import ManagedNode
+from loguru import logger
 
 
 class HardwarePublisherNode(ManagedNode):

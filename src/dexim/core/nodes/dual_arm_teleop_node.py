@@ -39,9 +39,6 @@ from abc import abstractmethod
 from collections.abc import Sequence
 
 import numpy as np
-from loguru import logger
-from dexim.core.spatial import Transform3D
-
 from dexim.core.nodes.protocols import (
     DEFAULT_SENSOR_WAIT_CONFIG,
     ControlNodeConfig,
@@ -50,6 +47,8 @@ from dexim.core.nodes.protocols import (
     TrackerDataProtocol,
 )
 from dexim.core.nodes.teleop_node import TeleopNode
+from dexim.core.spatial import Transform3D
+from loguru import logger
 
 
 class DualArmTeleopNode(TeleopNode):
@@ -312,7 +311,9 @@ class DualArmTeleopNode(TeleopNode):
             # Read actual position
             try:
                 current_state = self.interface.read()
-                current_joints = self._extract_model_config_from_interface(current_state.q)
+                current_joints = self._extract_model_config_from_interface(
+                    current_state.q
+                )
                 delta = target_joints - current_joints
                 max_joint_delta = np.max(np.abs(delta))
             except Exception as e:
@@ -369,15 +370,15 @@ class DualArmTeleopNode(TeleopNode):
 
                 # Check for stale data (buffered from before pause)
                 # Check both trackers - use the older timestamp for validation
-                left_age = float('inf')
-                right_age = float('inf')
+                left_age = float("inf")
+                right_age = float("inf")
                 if hasattr(left_tracker, "timestamp") and left_tracker.timestamp > 0:
                     left_age = current_time - left_tracker.timestamp
                 if hasattr(right_tracker, "timestamp") and right_tracker.timestamp > 0:
                     right_age = current_time - right_tracker.timestamp
 
                 max_age = max(left_age, right_age)
-                if max_age < float('inf') and max_age > STALE_THRESHOLD_SEC:
+                if max_age < float("inf") and max_age > STALE_THRESHOLD_SEC:
                     logger.debug(
                         f"Attempt {attempt + 1}/{max_attempts}: Skipping stale data "
                         f"(left: {left_age:.3f}s, right: {right_age:.3f}s)"

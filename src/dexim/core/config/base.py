@@ -3,10 +3,11 @@
 This module provides the common configuration classes that are reused by
 multiple packages (inspire-node, nova-node, g1-node, etc.).
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
 import scipy.spatial.transform
@@ -19,17 +20,23 @@ except ImportError as _err:
         "Install it via conda: conda install pinocchio -c conda-forge"
     ) from _err
 
+
 @dataclass
 class SubscriberConfig:
-    """Configuration for Manus data subscriber.
+    """Configuration for data subscriber.
 
     Attributes:
         address: ZMQ address to subscribe to (e.g., "tcp://localhost:5555")
         timeout_ms: Receive timeout in milliseconds
+        source_node_id: Node ID of the publisher, used to build typed topic names
+            (e.g., TopicBuilder().observation.hand_state(source_node_id)).
+            Defaults to "manus" for the common single-glove setup.
     """
 
     address: str = "tcp://localhost:5555"
     timeout_ms: int = 1000
+    source_node_id: str = "manus"
+
 
 @dataclass
 class ControlConfig:
@@ -53,7 +60,8 @@ class ControlConfig:
     # Velocity limiting
     enable_velocity_limiting: bool = True
     max_joint_velocity_rad_s: float = 3.14
-    safe_position_max_velocity_rad_s: Optional[float] = None
+    safe_position_max_velocity_rad_s: float | None = None
+
 
 @dataclass
 class SimInterfaceConfig:
@@ -69,7 +77,8 @@ class SimInterfaceConfig:
     mode: str = "sim"
     host: str = "localhost"
     port: int = 8080
-    backend: Optional[str] = None
+    backend: str | None = None
+
 
 @dataclass
 class TCPIPProtocolConfig:
@@ -83,6 +92,7 @@ class TCPIPProtocolConfig:
     ip: str = "192.168.1.100"
     port: int = 5001
 
+
 @dataclass
 class RS485ProtocolConfig:
     """RS485 protocol configuration.
@@ -94,6 +104,7 @@ class RS485ProtocolConfig:
 
     port: str = "/dev/ttyUSB0"
     baud: int = 115200
+
 
 @dataclass
 class BaseOffsetConfig:
@@ -108,10 +119,10 @@ class BaseOffsetConfig:
         translation_m: Translation [x, y, z] in meters
     """
 
-    euler_xyz_deg: List[float] = field(default_factory=lambda: [0.0, 0.0, 0.0])
-    translation_m: List[float] = field(default_factory=lambda: [0.0, 0.0, 0.0])
+    euler_xyz_deg: list[float] = field(default_factory=lambda: [0.0, 0.0, 0.0])
+    translation_m: list[float] = field(default_factory=lambda: [0.0, 0.0, 0.0])
 
-    def to_pin_se3(self) -> "pin.SE3":
+    def to_pin_se3(self) -> pin.SE3:
         """Convert to Pinocchio SE3 transformation.
 
         Returns:
@@ -127,9 +138,11 @@ class BaseOffsetConfig:
         # Create SE3 transformation
         return pin.SE3(R, np.array(self.translation_m))
 
+
 # =============================================================================
 # Nova-specific configurations
 # =============================================================================
+
 
 @dataclass
 class NovaRealConfig:
@@ -160,11 +173,12 @@ class NovaRealConfig:
                 "NovaRealConfig requires a non-None 'tcpip' field of type TCPIPProtocolConfig"
             )
 
-    def get_connection_info(self) -> Dict[str, Any]:
+    def get_connection_info(self) -> dict[str, Any]:
         """Return a normalized dict describing the connection info."""
 
         assert self.tcpip is not None
         return {"type": "tcpip", "ip": self.tcpip.ip, "port": self.tcpip.port}
+
 
 @dataclass
 class NovaConfig:
@@ -175,11 +189,11 @@ class NovaConfig:
 
     control_mode: str = "relative_pose"
     handedness: str = "left"  # "left" or "right" - determines tracker name only
-    calibration_file: Optional[str] = None  # Path to calibration JSON
-    home_joints_deg: List[float] = field(
+    calibration_file: str | None = None  # Path to calibration JSON
+    home_joints_deg: list[float] = field(
         default_factory=lambda: [0.0] * 6
     )  # Joint angles in degrees
-    base_offset: Optional[BaseOffsetConfig] = None
+    base_offset: BaseOffsetConfig | None = None
 
     def __post_init__(self):
         """Validate configuration."""
@@ -200,16 +214,18 @@ class NovaConfig:
 
         return np.deg2rad(self.home_joints_deg)
 
-    def get_base_placement(self) -> "pin.SE3":
+    def get_base_placement(self) -> pin.SE3:
         """Get base placement transformation."""
 
         if self.base_offset is None:
             return pin.SE3.Identity()
         return self.base_offset.to_pin_se3()
 
+
 # =============================================================================
 # Inspire-specific configurations
 # =============================================================================
+
 
 @dataclass
 class InspireRealConfig:
@@ -217,10 +233,10 @@ class InspireRealConfig:
 
     protocol: str = "tcpip"  # 'tcpip' or 'rs485'
 
-    tcpip: Optional[TCPIPProtocolConfig] = None
-    rs485: Optional[RS485ProtocolConfig] = None
+    tcpip: TCPIPProtocolConfig | None = None
+    rs485: RS485ProtocolConfig | None = None
 
-    modbus_id: Optional[int] = None
+    modbus_id: int | None = None
 
     def __post_init__(self):
         allowed = {"tcpip", "rs485"}
@@ -238,7 +254,7 @@ class InspireRealConfig:
                 "InspireRealConfig.protocol='rs485' requires a non-None 'rs485' field"
             )
 
-    def get_connection_info(self) -> Dict[str, Any]:
+    def get_connection_info(self) -> dict[str, Any]:
         """Return a normalized dict describing the active connection."""
 
         if self.protocol == "tcpip":
@@ -252,11 +268,12 @@ class InspireRealConfig:
             "modbus_id": self.modbus_id,
         }
 
+
 @dataclass
 class InspireConfig:
     """Inspire hand-specific configuration."""
 
-    feature_extraction: Dict[str, Any] = field(
+    feature_extraction: dict[str, Any] = field(
         default_factory=lambda: {
             "src_indices": [1, 6, 11, 16, 21],
             "dst_indices": [4, 9, 14, 19, 24],
@@ -264,9 +281,9 @@ class InspireConfig:
         }
     )
 
-    alpha: List[float] = field(default_factory=lambda: [1.0] * 5)
+    alpha: list[float] = field(default_factory=lambda: [1.0] * 5)
     handedness: str = "left"
-    active_dofs_override: Optional[int] = None
+    active_dofs_override: int | None = None
 
     def __post_init__(self):
         if self.handedness not in ["left", "right"]:
@@ -279,9 +296,11 @@ class InspireConfig:
                 f"InspireConfig.alpha must be a list of 5 floats, got: {self.alpha}"
             )
 
+
 # =============================================================================
 # DH5-specific configurations
 # =============================================================================
+
 
 @dataclass
 class DH5RealConfig:
@@ -293,7 +312,7 @@ class DH5RealConfig:
         default_factory=lambda: RS485ProtocolConfig(port="/dev/ttyUSB0", baud=115200)
     )
 
-    modbus_id: Optional[int] = None
+    modbus_id: int | None = None
 
     def __post_init__(self):
         """Validate DH5 protocol (RS485 only) and ensure payload exists."""
@@ -309,11 +328,11 @@ class DH5RealConfig:
                 "DH5RealConfig requires a non-None 'rs485' field of type RS485ProtocolConfig"
             )
 
-    def get_connection_info(self) -> Dict[str, Any]:
+    def get_connection_info(self) -> dict[str, Any]:
         """Return a normalized dict describing the RS485 connection info."""
 
         assert self.rs485 is not None
-        info: Dict[str, Any] = {
+        info: dict[str, Any] = {
             "type": "rs485",
             "port": self.rs485.port,
             "baud": self.rs485.baud,
@@ -322,19 +341,20 @@ class DH5RealConfig:
             info["modbus_id"] = self.modbus_id
         return info
 
+
 @dataclass
 class DH5Config:
     """DH5 hand-specific configuration."""
 
     handedness: str = "left"  # "left" or "right"
-    feature_extraction: Dict[str, Any] = field(
+    feature_extraction: dict[str, Any] = field(
         default_factory=lambda: {
             "src_indices": [1, 6, 11, 16, 21],  # Metacarpals
             "dst_indices": [4, 9, 14, 19, 24],  # Fingertips
             "apply_rotation": True,
         }
     )
-    alpha: List[float] = field(
+    alpha: list[float] = field(
         default_factory=lambda: [1.5, 1.0, 1.0, 1.0, 1.0]
     )  # Scaling factors
 
@@ -344,9 +364,11 @@ class DH5Config:
                 f"Invalid handedness for DH5Config: {self.handedness}. Must be 'left' or 'right'"
             )
 
+
 # =============================================================================
 # G1 (Unitree) specific configurations
 # =============================================================================
+
 
 @dataclass
 class G1RealConfig:
@@ -356,8 +378,8 @@ class G1RealConfig:
     network_interface: str = "enp2s0"  # Network interface for DDS
     control_mode_pr: int = 0  # Control mode for ankle joints (0=PR, 1=AB)
     control_dt: float = 0.002  # Control loop timestep in seconds (2ms)
-    kp: Optional[List[float]] = None  # Proportional gains
-    kd: Optional[List[float]] = None  # Derivative gains
+    kp: list[float] | None = None  # Proportional gains
+    kd: list[float] | None = None  # Derivative gains
 
     def __post_init__(self):
         """Validate G1 DDS configuration."""
@@ -375,7 +397,7 @@ class G1RealConfig:
         if self.control_dt <= 0:
             raise ValueError(f"Invalid control_dt: {self.control_dt}. Must be > 0")
 
-    def get_connection_info(self) -> Dict[str, Any]:
+    def get_connection_info(self) -> dict[str, Any]:
         """Return a normalized dict describing the DDS connection info."""
 
         return {
@@ -384,6 +406,7 @@ class G1RealConfig:
             "control_mode_pr": self.control_mode_pr,
             "control_dt": self.control_dt,
         }
+
 
 @dataclass
 class G1Config:
@@ -398,11 +421,11 @@ class G1Config:
 
     dof: int = 29  # DOF variant: 23 or 29 (29 includes wrist pitch/yaw)
     control_mode: str = "relative_pose"
-    calibration_file: Optional[str] = None
-    home_joints_deg: List[float] = field(
+    calibration_file: str | None = None
+    home_joints_deg: list[float] = field(
         default_factory=lambda: [0.0] * 14
     )  # Arm joints (14 for 29-DOF, 10 for 23-DOF)
-    base_offset: Optional[BaseOffsetConfig] = field(
+    base_offset: BaseOffsetConfig | None = field(
         default_factory=lambda: BaseOffsetConfig(translation_m=[0.0, 0.0, 0.75])
     )
 
@@ -432,16 +455,18 @@ class G1Config:
 
         return np.deg2rad(self.home_joints_deg)
 
-    def get_base_placement(self) -> "pin.SE3":
+    def get_base_placement(self) -> pin.SE3:
         """Get base placement transformation."""
 
         if self.base_offset is None:
             return pin.SE3(np.eye(3), np.array([0.0, 0.0, 0.75]))
         return self.base_offset.to_pin_se3()
 
+
 # =============================================================================
 # Interface configurations
 # =============================================================================
+
 
 @dataclass
 class RealInterfaceConfig:
@@ -453,10 +478,10 @@ class RealInterfaceConfig:
     mode: str = "real"
     hardware: str = "nova"  # one of: 'nova', 'dh5', 'inspire', 'unitree_g1'
 
-    nova: Optional[NovaRealConfig] = None
-    dh5: Optional[DH5RealConfig] = None
-    inspire: Optional[InspireRealConfig] = None
-    g1: Optional[G1RealConfig] = None
+    nova: NovaRealConfig | None = None
+    dh5: DH5RealConfig | None = None
+    inspire: InspireRealConfig | None = None
+    g1: G1RealConfig | None = None
 
     def __post_init__(self):
         allowed = {"nova", "dh5", "inspire", "unitree_g1"}
@@ -480,13 +505,14 @@ class RealInterfaceConfig:
                 "RealInterfaceConfig.hardware='unitree_g1' requires 'g1' field"
             )
 
+
 @dataclass
 class InterfaceConfig:
     """Top-level interface config which discriminates sim vs real."""
 
     mode: str = "sim"  # 'sim' or 'real'
-    sim: Optional[SimInterfaceConfig] = field(default_factory=SimInterfaceConfig)
-    real: Optional[RealInterfaceConfig] = None
+    sim: SimInterfaceConfig | None = field(default_factory=SimInterfaceConfig)
+    real: RealInterfaceConfig | None = None
 
     def __post_init__(self):
         if self.mode == "sim":
@@ -524,9 +550,11 @@ class InterfaceConfig:
             return self.real.g1
         return None
 
+
 # =============================================================================
 # Hand tracking configurations
 # =============================================================================
+
 
 @dataclass
 class CameraConfig:
@@ -534,7 +562,7 @@ class CameraConfig:
 
     mode: str = "usb"  # "usb" | "realsense"
     device_index: int = 0
-    serial_number: Optional[str] = None
+    serial_number: str | None = None
     preset: str = "720p30"
     publish_raw_frames: bool = False
 
@@ -563,6 +591,7 @@ class CameraConfig:
         if not is_valid:
             raise ValueError(f"Invalid camera configuration: {error_msg}")
 
+
 @dataclass
 class MediaPipeConfig:
     """MediaPipe Hands configuration."""
@@ -589,6 +618,7 @@ class MediaPipeConfig:
         if self.model_complexity not in [0, 1]:
             raise ValueError(f"Invalid model_complexity: {self.model_complexity}")
 
+
 @dataclass
 class EndpointsConfig:
     """ZMQ endpoint configuration for HandTrackingNode."""
@@ -597,11 +627,13 @@ class EndpointsConfig:
     control: str = "tcp://localhost:5550"
     status: str = "tcp://localhost:5551"
 
+
 @dataclass
 class PublishConfig:
     """Publishing behavior configuration."""
 
-    rate_hz: Optional[float] = None  # None = publish at camera FPS
+    rate_hz: float | None = None  # None = publish at camera FPS
+
 
 @dataclass
 class HandTrackingConfig:
@@ -639,9 +671,11 @@ class HandTrackingConfig:
                 f"Invalid heartbeat_interval: {self.heartbeat_interval}. Must be > 0"
             )
 
+
 # =============================================================================
 # Main control node configuration
 # =============================================================================
+
 
 @dataclass
 class ControlNodeConfig:
@@ -654,10 +688,10 @@ class ControlNodeConfig:
     control: ControlConfig = field(default_factory=ControlConfig)
 
     # Robot-specific configs (only one will be used based on robot_type)
-    dh5: Optional[DH5Config] = None
-    nova: Optional[NovaConfig] = None
-    inspire: Optional[InspireConfig] = None
-    g1: Optional[G1Config] = None
+    dh5: DH5Config | None = None
+    nova: NovaConfig | None = None
+    inspire: InspireConfig | None = None
+    g1: G1Config | None = None
 
     def __post_init__(self):
         """Validate configuration after initialization."""

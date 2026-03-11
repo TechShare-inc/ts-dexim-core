@@ -29,6 +29,7 @@ Example:
     with MyRobotNode("my_robot", config) as node:
         node.run()
 """
+
 from __future__ import annotations
 
 import signal
@@ -37,10 +38,10 @@ from abc import ABC, abstractmethod
 from typing import Any, Optional, Protocol, runtime_checkable
 
 import numpy as np
-from loguru import logger
-
 from dexim.core.nodes.managed import ManagedNode
 from dexim.core.nodes.utils import RateLimiter, smootherstep
+from loguru import logger
+
 
 @runtime_checkable
 class DataSubscriber(Protocol):
@@ -55,6 +56,7 @@ class DataSubscriber(Protocol):
         """Close the subscriber connection."""
 
         ...
+
 
 @runtime_checkable
 class ControlNodeConfig(Protocol):
@@ -74,6 +76,7 @@ class ControlNodeConfig(Protocol):
 
         ...
 
+
 @runtime_checkable
 class RobotInterfaceProtocol(Protocol):
     """Protocol for robot interfaces."""
@@ -92,6 +95,7 @@ class RobotInterfaceProtocol(Protocol):
         """Disconnect from robot."""
 
         ...
+
 
 class RobotControlNode(ManagedNode, ABC):
     """Abstract base class for robot teleoperation control nodes.

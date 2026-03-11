@@ -40,9 +40,7 @@ from abc import abstractmethod
 from typing import Any
 
 import numpy as np
-from loguru import logger
 from dexim.core.messages import TopicBuilder
-
 from dexim.core.nodes.hardware_publisher import HardwarePublisherNode
 from dexim.core.nodes.protocols import (
     ControlNodeConfig,
@@ -50,6 +48,7 @@ from dexim.core.nodes.protocols import (
     RobotInterfaceProtocol,
 )
 from dexim.core.nodes.utils import RateLimiter, smootherstep
+from loguru import logger
 
 
 class TeleopNode(HardwarePublisherNode):

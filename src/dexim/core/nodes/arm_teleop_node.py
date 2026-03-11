@@ -38,9 +38,6 @@ from __future__ import annotations
 from abc import abstractmethod
 
 import numpy as np
-from loguru import logger
-from dexim.core.spatial import Transform3D
-
 from dexim.core.nodes.protocols import (
     DEFAULT_SENSOR_WAIT_CONFIG,
     ControlNodeConfig,
@@ -49,6 +46,8 @@ from dexim.core.nodes.protocols import (
     TrackerDataProtocol,
 )
 from dexim.core.nodes.teleop_node import TeleopNode
+from dexim.core.spatial import Transform3D
+from loguru import logger
 
 # Reject tracker data older than this threshold to avoid acting on buffered (stale)
 # poses. 60 Hz trackers produce a frame every ~17 ms, so 100 ms is ~6 dropped frames.

@@ -13,8 +13,8 @@ Import directly from the node packages instead:
 This file should be deleted. It only exists to provide a helpful error message
 during the transition period.
 """
-from __future__ import annotations
 
+from __future__ import annotations
 
 raise ImportError(
     "core_node_framework.factory has been removed. "

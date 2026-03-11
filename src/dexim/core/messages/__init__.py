@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 import msgpack
+from dexim.core.messages.types import HandState, RigidPose, SkeletonJoint
 
 # Control/status endpoints
 CTRL_PUB_ENDPOINT = "tcp://localhost:5550"
@@ -40,16 +41,36 @@ class TopicBuilder:
     @dataclass(frozen=True)
     class _ActionTopics:
         def joint_cmd(self, device_id: str) -> bytes:
-            return f"action/{device_id}/joint_cmd".encode("utf-8")
+            return f"action/{device_id}/joint_cmd".encode()
 
     @dataclass(frozen=True)
     class _ObservationTopics:
         def joint_state(self, device_id: str) -> bytes:
-            return f"observation/{device_id}/joint_state".encode("utf-8")
+            return f"observation/{device_id}/joint_state".encode()
+
+        def hand_state(self, device_id: str) -> bytes:
+            return f"observation/{device_id}/hand_state".encode()
+
+        def rigid_pose(self, device_id: str) -> bytes:
+            return f"observation/{device_id}/rigid_pose".encode()
 
     def __init__(self) -> None:
         self.action = self._ActionTopics()
         self.observation = self._ObservationTopics()
+
+
+# ---------------------------------------------------------------------------
+# Backward-compatibility topic constants
+#
+# These constants resolve the undefined-import errors in packages that still
+# import them directly.  New code should use TopicBuilder instead.
+# ---------------------------------------------------------------------------
+
+#: Deprecated – use ``TopicBuilder().observation.hand_state(node_id)``
+TOPIC_MANUS_RAW_SKELETONS = b"observation/manus/manus_raw_skeletons"
+
+#: Deprecated – use ``TopicBuilder().observation.rigid_pose(node_id)``
+TOPIC_MANUS_TRACKERS = b"observation/manus/manus_trackers"
 
 
 class TopicValidator:
@@ -128,8 +149,10 @@ def pack_status_message(
 
 
 __all__ = [
+    # Endpoints
     "CTRL_PUB_ENDPOINT",
     "STATUS_PULL_ENDPOINT",
+    # Control topics & commands
     "TOPIC_CTRL",
     "CTRL_START",
     "CTRL_PAUSE",
@@ -140,15 +163,25 @@ __all__ = [
     "CTRL_START_PUB",
     "CTRL_PAUSE_PUB",
     "CTRL_STOP_PUB",
+    # Node status values
     "STATUS_INITIALIZED",
     "STATUS_STARTED",
     "STATUS_PAUSED",
     "STATUS_HEALTHY",
     "STATUS_ERROR",
     "STATUS_SHUTTING_DOWN",
+    # Topic helpers
     "TopicBuilder",
     "TopicValidator",
+    # Backward-compat topic constants (deprecated)
+    "TOPIC_MANUS_RAW_SKELETONS",
+    "TOPIC_MANUS_TRACKERS",
+    # Serialization helpers
     "pack_data_message",
     "unpack_data_message",
     "pack_status_message",
+    # Message types
+    "HandState",
+    "RigidPose",
+    "SkeletonJoint",
 ]
