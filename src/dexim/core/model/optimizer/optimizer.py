@@ -7,7 +7,6 @@ to robot joint configurations using nlopt optimization.
 
 from __future__ import annotations
 
-
 import time
 from dataclasses import dataclass, field
 from enum import Enum
@@ -80,7 +79,7 @@ class VectorOptimizer:
 
     def __init__(
         self,
-        hand_model: "BaseHandModel",
+        hand_model: BaseHandModel,
         config: OptimizerConfig | None = None,
     ):
         """
