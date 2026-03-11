@@ -4,6 +4,7 @@ BaseHandModel: Abstract base class for hand robot kinematics models.
 This module provides an abstract base class that defines the common interface
 for all hand robot models (DH5, Inspire, Generic, etc.).
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -21,6 +22,7 @@ except ImportError as _err:
 
 if TYPE_CHECKING:
     from dexim.core.model.optimizer import VectorOptimizer
+
 
 class BaseHandModel(ABC):
     """
@@ -65,7 +67,7 @@ class BaseHandModel(ABC):
     tip_frame_names: list[str]
     remaining_frame_names: list[str]
     ee_frame_names: list[str]
-    optimizer: "VectorOptimizer | None" = None
+    optimizer: VectorOptimizer | None = None
 
     @abstractmethod
     def __init__(self, **kwargs):
