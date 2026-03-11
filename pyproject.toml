@@ -1,5 +1,6 @@
 [build-system]
-requires = ["setuptools>=72"]
+requires = ["uv_build>=0.10.0"]
+build-backend = "uv_build"
 
 [project]
 name = "dexim-core"
@@ -24,10 +25,9 @@ dependencies = [
 [tool.pyright]
 stubPath = "typings"
 
-[tool.setuptools.packages.find]
-where = ["src"]
-# Enable namespace package discovery so dexim.core co-exists with dexim.nova etc.
-namespaces = true
+[tool.uv.build-backend]
+module-name = "dexim.core"
+namespace = true
 
 [tool.pixi.workspace]
 name = "dexim-core"
