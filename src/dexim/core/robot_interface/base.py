@@ -13,6 +13,28 @@ TState = TypeVar("TState", covariant=True)
 TCmd = TypeVar("TCmd", contravariant=True)
 
 
+class DeviceInterface(Protocol[TState, TCmd]):
+    """Bidirectional device interface: lifecycle + read/write.
+
+    The common base for any hardware or simulation device that both
+    produces state (``read()``) and consumes commands (``write()``).
+    ``RobotInterface`` is the canonical specialisation that pins
+    ``TState → JointState`` and ``TCmd → JointCommand``.
+
+    Type parameters:
+        TState: The observable state type returned by ``read()``.
+        TCmd:   The command type consumed by ``write()``.
+    """
+
+    # --- lifecycle ---
+    def connect(self) -> None: ...
+    def disconnect(self) -> None: ...
+
+    # --- io ---
+    def read(self) -> TState: ...
+    def write(self, cmd: TCmd) -> None: ...
+
+
 @dataclass
 class JointState:
     q: np.ndarray  # actuated positions [n_actuated]
@@ -77,13 +99,17 @@ class ActuatorInterface(Protocol[TCmd]):
 
 
 class RobotInterface(
-    SensorInterface[JointState], ActuatorInterface[JointCommand], Protocol
+    DeviceInterface[JointState, JointCommand],
+    SensorInterface[JointState],
+    ActuatorInterface[JointCommand],
+    Protocol,
 ):
     """Full bidirectional robot interface (sensor + actuator).
 
-    Pins ``TState`` to ``JointState`` and ``TCmd`` to ``JointCommand``.
-    Inherits ``connect``, ``disconnect``, ``read``, ``write``, ``time``,
-    and ``estop`` from the parent protocols.
+    Specialises ``DeviceInterface[JointState, JointCommand]`` and inherits
+    ``connect``, ``disconnect``, ``read``, ``write`` from it.  Also inherits
+    ``time()`` from ``SensorInterface`` and ``estop()`` from
+    ``ActuatorInterface``.
     """
 
     # --- meta ---

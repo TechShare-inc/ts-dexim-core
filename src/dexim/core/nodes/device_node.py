@@ -1,10 +1,9 @@
 """DeviceNode — ManagedNode subclass with a formal device interface slot.
 
-Defines ``DeviceInterface``, the minimal lifecycle protocol for any hardware
-or simulation device (sensor, actuator, robot, camera, glove, …).  Adds a
-concrete ``on_shutdown()`` that disconnects the interface before handing off
-to ``super()``, plus three role-marker subclasses that express the node's
-communication direction.
+Imports ``DeviceInterface`` from ``dexim.core.robot_interface`` and re-exports
+it for backward compatibility.  Adds a concrete ``on_shutdown()`` that
+disconnects the interface before handing off to ``super()``, plus three
+role-marker subclasses that express the node's communication direction.
 
 Role subclasses
 ---------------
@@ -19,23 +18,20 @@ PubSubDeviceNode
 
 from __future__ import annotations
 
-from typing import Protocol, runtime_checkable
+from typing import Any
 
 from dexim.core.nodes.managed import ManagedNode
+from dexim.core.robot_interface import (
+    DeviceInterface,
+)  # re-exported for backward compat
 
-
-@runtime_checkable
-class DeviceInterface(Protocol):
-    """Minimal lifecycle protocol for any hardware or simulation device.
-
-    Covers sensors (RealSense), input devices (Manus glove), and actuators
-    (Inspire hand, Nova arm).  All three concrete interface families
-    (``SensorInterface``, ``ActuatorInterface``, ``RobotInterface``) from
-    ``dexim.core.robot_interface`` satisfy this protocol structurally.
-    """
-
-    def connect(self) -> None: ...
-    def disconnect(self) -> None: ...
+__all__ = [
+    "DeviceInterface",
+    "DeviceNode",
+    "PublisherDeviceNode",
+    "SubscriberDeviceNode",
+    "PubSubDeviceNode",
+]
 
 
 class DeviceNode(ManagedNode):
@@ -47,12 +43,12 @@ class DeviceNode(ManagedNode):
 
     Attributes:
         interface: The device interface.  Must be assigned by the concrete
-            subclass ``__init__`` before ``run()`` is called.  Declared here
-            as a class-level annotation only; no default value is enforced so
-            that subclasses may use any compatible type.
+            subclass ``__init__`` before ``run()`` is called.  Typed as
+            ``Any`` so both read-only (``SensorInterface``) and bidirectional
+            (``DeviceInterface``) implementations are accepted without casts.
     """
 
-    interface: DeviceInterface
+    interface: Any
 
     def on_shutdown(self) -> None:
         """Disconnect the device interface, then delegate to super().
