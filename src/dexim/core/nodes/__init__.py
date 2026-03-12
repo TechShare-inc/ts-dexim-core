@@ -9,6 +9,10 @@ Node Hierarchy:
     │   ├── ArmTeleopNode: For arm robots using tracker data (IK-based)
     │   ├── DualArmTeleopNode: For dual-arm robots (e.g., G1 humanoid)
     │   └── HandTeleopNode: For hand robots using skeleton data (optimizer-based)
+    ├── DeviceNode: Node owning a hardware/simulation interface (disconnect on shutdown)
+    │   ├── PublisherDeviceNode: Role marker — publish-only (sensors/cameras)
+    │   ├── SubscriberDeviceNode: Role marker — pure-actuator (command sinks)
+    │   └── PubSubDeviceNode: Role marker — bidirectional (read state + write commands)
     ├── HardwarePublisherNode: For hardware data publishing nodes
     ├── CommandNode: For command publishing nodes
     └── RecorderNode: For data recording nodes
@@ -46,6 +50,12 @@ from __future__ import annotations
 # Base node classes
 from dexim.core.nodes.arm_teleop_node import ArmTeleopNode
 from dexim.core.nodes.command_node import CommandNode
+from dexim.core.nodes.device_node import (
+    DeviceNode,
+    PublisherDeviceNode,
+    PubSubDeviceNode,
+    SubscriberDeviceNode,
+)
 from dexim.core.nodes.dual_arm_teleop_node import DualArmTeleopNode
 from dexim.core.nodes.hand_teleop_node import HandTeleopNode
 from dexim.core.nodes.hardware_publisher import HardwarePublisherNode
@@ -91,6 +101,11 @@ __all__ = [
     "ArmTeleopNode",
     "DualArmTeleopNode",
     "HandTeleopNode",
+    # Device nodes
+    "DeviceNode",
+    "PublisherDeviceNode",
+    "SubscriberDeviceNode",
+    "PubSubDeviceNode",
     # Recorder
     "RecorderNode",
     # Orchestrator
