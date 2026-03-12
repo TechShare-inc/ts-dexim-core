@@ -51,6 +51,7 @@ from __future__ import annotations
 from dexim.core.nodes.arm_teleop_node import ArmTeleopNode
 from dexim.core.nodes.command_node import CommandNode
 from dexim.core.nodes.device_node import (
+    DeviceInterface,
     DeviceNode,
     PublisherDeviceNode,
     PubSubDeviceNode,

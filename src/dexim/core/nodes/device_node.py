@@ -1,8 +1,10 @@
 """DeviceNode — ManagedNode subclass with a formal device interface slot.
 
-Adds a concrete ``on_shutdown()`` that disconnects the device interface
-before handing off to ``super()``, plus three role-marker subclasses that
-express the node's communication direction.
+Defines ``DeviceInterface``, the minimal lifecycle protocol for any hardware
+or simulation device (sensor, actuator, robot, camera, glove, …).  Adds a
+concrete ``on_shutdown()`` that disconnects the interface before handing off
+to ``super()``, plus three role-marker subclasses that express the node's
+communication direction.
 
 Role subclasses
 ---------------
@@ -17,22 +19,22 @@ PubSubDeviceNode
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from dexim.core.nodes.managed import ManagedNode
 
-if TYPE_CHECKING:
-    pass
-
 
 @runtime_checkable
-class _DisconnectableInterface(Protocol):
-    """Minimal structural contract required by DeviceNode.
+class DeviceInterface(Protocol):
+    """Minimal lifecycle protocol for any hardware or simulation device.
 
-    Both ``SensorInterface`` and ``ActuatorInterface`` from
-    ``dexim.core.robot_interface`` satisfy this protocol.
+    Covers sensors (RealSense), input devices (Manus glove), and actuators
+    (Inspire hand, Nova arm).  All three concrete interface families
+    (``SensorInterface``, ``ActuatorInterface``, ``RobotInterface``) from
+    ``dexim.core.robot_interface`` satisfy this protocol structurally.
     """
 
+    def connect(self) -> None: ...
     def disconnect(self) -> None: ...
 
 
@@ -50,7 +52,7 @@ class DeviceNode(ManagedNode):
             that subclasses may use any compatible type.
     """
 
-    interface: _DisconnectableInterface
+    interface: DeviceInterface
 
     def on_shutdown(self) -> None:
         """Disconnect the device interface, then delegate to super().
