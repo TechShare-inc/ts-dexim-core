@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import abc
 import time
+from typing import Any
 
 import zmq
 from dexim.core.messages import (
@@ -286,7 +287,7 @@ class ManagedNode(abc.ABC):
     # ----------------------
     # Status/heartbeat
     # ----------------------
-    def report_status(self, status: str, info: dict | None = None) -> None:
+    def report_status(self, status: str, info: dict[str, Any] | None = None) -> None:
         if self._push_status is None:
             return
         payload = pack_status_message(
