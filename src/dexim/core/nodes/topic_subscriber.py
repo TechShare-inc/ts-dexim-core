@@ -61,8 +61,9 @@ class TopicSubscriber(Generic[T]):
         topic: Topic prefix bytes to subscribe to.
         msg_type: Dataclass type that has a ``from_dict(d)`` classmethod.
             For list-valued messages use ``read_batch()`` instead of ``read()``.
-        timeout_ms: Receive timeout in milliseconds.  ``read()`` returns
-            ``None`` after this duration if no message arrives.
+        timeout_ms: Receive timeout in milliseconds.  ``read()`` / ``read_batch()``
+            block for up to this duration.  ``read_latest()`` /
+            ``read_latest_batch()`` always return immediately (non-blocking).
     """
 
     def __init__(
@@ -80,6 +81,11 @@ class TopicSubscriber(Generic[T]):
         self._ctx = zmq.Context.instance()
         self._socket: zmq.Socket = self._ctx.socket(zmq.SUB)
         self._socket.setsockopt(zmq.RCVTIMEO, timeout_ms)
+        # RCVHWM=0 (unlimited) prevents ZMQ from silently dropping individual
+        # frames of a 2-frame multipart message when the queue is full.  Manual
+        # draining in read_latest() / read_latest_batch() achieves "latest only"
+        # without the partial-frame-drop risk that RCVHWM=1 creates.
+        self._socket.setsockopt(zmq.RCVHWM, 0)
         self._socket.setsockopt_string(
             zmq.SUBSCRIBE, topic.decode("utf-8", errors="replace")
         )
@@ -159,6 +165,74 @@ class TopicSubscriber(Generic[T]):
                 results.append(obj)
         return results
 
+    def read_latest(self) -> T | None:
+        """Drain the receive queue and return only the most recent message.
+
+        Non-blocking.  Discards all queued messages except the newest, so the
+        control loop always acts on fresh data regardless of how many frames
+        accumulated between iterations.
+
+        Use this in hot control loops (30 - 120 Hz) instead of ``read()``.
+        For list-valued topics use ``read_latest_batch()``.
+
+        Returns:
+            The most recently published ``T`` instance, or ``None`` if the
+            queue was empty.
+        """
+        latest_raw: dict[str, Any] | None = None
+        while True:
+            raw = self._recv_raw_noblock()
+            if raw is None:
+                break
+            latest_raw = raw
+
+        if latest_raw is None:
+            return None
+
+        data = latest_raw.get("data")
+        if data is None:
+            return None
+
+        if isinstance(data, list):
+            if len(data) == 1:
+                data = data[0]
+            else:
+                return None
+
+        return self._deserialise(data)
+
+    def read_latest_batch(self) -> list[T]:
+        """Drain the receive queue and return items from the most recent message.
+
+        Non-blocking.  Use this in hot control loops when the publisher sends a
+        list of objects per message (e.g. a batch of ``HandState`` skeletons).
+
+        Returns:
+            Items from the most recently published message, or an empty list if
+            the queue was empty.
+        """
+        latest_raw: dict[str, Any] | None = None
+        while True:
+            raw = self._recv_raw_noblock()
+            if raw is None:
+                break
+            latest_raw = raw
+
+        if latest_raw is None:
+            return []
+
+        data = latest_raw.get("data")
+        if data is None:
+            return []
+
+        items = data if isinstance(data, list) else [data]
+        results: list[T] = []
+        for item in items:
+            obj = self._deserialise(item)
+            if obj is not None:
+                results.append(obj)
+        return results
+
     def close(self) -> None:
         """Close the ZMQ socket.
 
@@ -201,7 +275,7 @@ class TopicSubscriber(Generic[T]):
     # ------------------------------------------------------------------
 
     def _recv_raw(self) -> dict[str, Any] | None:
-        """Receive one multipart message and unpack it.
+        """Receive one multipart message and unpack it (blocking up to ``timeout_ms``).
 
         Returns:
             Unpacked dict with keys ``topic``, ``timestamp``, ``data``,
@@ -215,6 +289,37 @@ class TopicSubscriber(Generic[T]):
             return unpacked
         except zmq.Again:
             # Timeout — normal, not an error
+            return None
+        except zmq.ZMQError as exc:
+            logger.warning(
+                f"TopicSubscriber[{self._msg_type.__name__}] ZMQ error: {exc}"
+            )
+            self._error_count += 1
+            return None
+        except Exception as exc:
+            logger.warning(
+                f"TopicSubscriber[{self._msg_type.__name__}] unpack error: {exc}"
+            )
+            self._error_count += 1
+            return None
+
+    def _recv_raw_noblock(self) -> dict[str, Any] | None:
+        """Attempt to receive one multipart message without blocking.
+
+        Used by ``read_latest()`` and ``read_latest_batch()`` to drain the
+        receive queue.  Returns ``None`` immediately when the queue is empty
+        (``zmq.Again``) — never waits for ``timeout_ms``.
+
+        Returns:
+            Unpacked dict, or ``None`` if the queue is empty or an error occurs.
+        """
+        try:
+            frames = self._socket.recv_multipart(flags=zmq.NOBLOCK)
+            self._receive_count += 1
+            unpacked = unpack_data_message(frames)
+            self._last_timestamp = unpacked.get("timestamp")
+            return unpacked
+        except zmq.Again:
             return None
         except zmq.ZMQError as exc:
             logger.warning(

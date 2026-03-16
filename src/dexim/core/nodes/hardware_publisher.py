@@ -79,7 +79,6 @@ class HardwarePublisherNode(ManagedNode):
             self._next_tick_ts = time.time()
         # Enable publishing on start
         self.is_publishing = True
-        logger.debug(f"[HW_PUB] on_start: is_publishing set to {self.is_publishing}")
 
     def on_pause(self) -> None:
         # Pause publishing but keep node alive
@@ -108,17 +107,8 @@ class HardwarePublisherNode(ManagedNode):
             self._pub_data = None
 
     def _main_loop_iteration(self) -> None:
-        # DEBUG: Entry point logging
-        logger.debug(
-            f"[HW_PUB] _main_loop_iteration called, is_publishing={self.is_publishing}"
-        )
-
-        # Control polling is handled by ManagedNode.run()
-        # No need to poll again here - just check publishing state
-
         # Only publish when publishing is enabled
         if not self.is_publishing:
-            logger.debug("[HW_PUB] Publishing disabled, returning")
             return
 
         # Rate limiting: only proceed when the next tick is due
@@ -149,14 +139,10 @@ class HardwarePublisherNode(ManagedNode):
         if isinstance(result, list):
             # Batch publishing: result is List[Tuple[bytes, Any]]
             for topic, data in result:
-                logger.debug(
-                    f"[HW_PUB] About to call _send with topic={topic} (batch mode)"
-                )
                 self._send(topic, data)
         else:
             # Single publishing: result is Tuple[bytes, Any]
             topic, data = result
-            logger.debug(f"[HW_PUB] About to call _send with topic={topic}")
             self._send(topic, data)
 
     # ----------------------
@@ -166,30 +152,15 @@ class HardwarePublisherNode(ManagedNode):
         if self._pub_data is None:
             return
         try:
-            # Topics must always be bytes (enforced by shared_messages.constants)
-            assert isinstance(topic, bytes), f"Topic must be bytes, got {type(topic)}"
-
             topic_frame, payload_frame = self.pack_message(topic, data)
-
-            # DEBUG: Verify frames are distinct and correct
-            logger.debug(
-                f"[HW_PUB] pack_message returned:\n"
-                f"  topic_frame type={type(topic_frame)}, len={len(topic_frame)}, value={topic_frame!r}\n"
-                f"  payload_frame type={type(payload_frame)}, len={len(payload_frame)}, first_50_bytes={payload_frame[:50]!r}\n"
-                f"  frames_are_same_object={topic_frame is payload_frame}"
+            self._pub_data.send_multipart(
+                [topic_frame, payload_frame], flags=zmq.DONTWAIT
             )
-
-            # Prepare multipart message
-            frames_to_send = [topic_frame, payload_frame]
-            logger.debug(
-                f"[HW_PUB] Sending {len(frames_to_send)} frames via send_multipart"
-            )
-
-            self._pub_data.send_multipart(frames_to_send, flags=zmq.DONTWAIT)
+        except zmq.Again:
+            # DONTWAIT drop — expected when no subscribers or HWM reached; non-fatal.
+            logger.debug(f"Dropped frame on topic {topic!r}: no subscriber or HWM")
         except Exception as e:
-            # Non-fatal: skip this frame
-            logger.error(f"Failed to send message on topic {topic}: {e}")
-            pass
+            logger.debug(f"Failed to send message on topic {topic!r}: {e}")
 
     def pack_message(self, topic: bytes, data: Any) -> tuple[bytes, bytes]:
         # Default packer: 2-frame (topic, msgpack payload with timestamp)
