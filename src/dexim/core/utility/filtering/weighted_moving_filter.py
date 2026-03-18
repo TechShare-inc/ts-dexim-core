@@ -67,6 +67,21 @@ class WeightedMovingFilter:
         self._data_queue.append(new_array)
         self._filtered_data = self._apply_filter()
 
+    def filter(self, data: npt.ArrayLike) -> np.ndarray:
+        """Add a sample and return the filtered result.
+
+        Convenience alias for ``add_data`` + ``filtered_data`` so all filter
+        types share the same single-call interface.
+
+        Args:
+            data: New sample vector of shape ``(data_size,)``.
+
+        Returns:
+            Filtered vector of shape ``(data_size,)``.
+        """
+        self.add_data(data)
+        return self.filtered_data
+
     @property
     def filtered_data(self) -> np.ndarray:
         """Return the most recent filtered sample."""

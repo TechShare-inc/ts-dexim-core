@@ -1,8 +1,8 @@
 """Shared utilities for teleop system."""
+
 from __future__ import annotations
 
-
-from .filtering import WeightedMovingFilter
+from .filtering import ExponentialMovingFilter, OneEuroFilter, WeightedMovingFilter
 from .logging import setup_logger
 from .ports import (
     BIND_ALL_INTERFACES,
@@ -35,6 +35,8 @@ __all__ = [
     "setup_logger",
     # Filtering
     "WeightedMovingFilter",
+    "ExponentialMovingFilter",
+    "OneEuroFilter",
     # Port Constants
     "CONTROL_PORT",
     "STATUS_PORT",

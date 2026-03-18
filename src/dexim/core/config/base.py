@@ -48,7 +48,10 @@ class ControlConfig:
         safe_position_on_timeout: Move to safe position on timeout
         move_to_home_at_start: Move to home position at startup
         enable_velocity_limiting: Enable velocity limiting for safe motion
-        max_joint_velocity_rad_s: Maximum joint velocity in rad/s
+        max_joint_velocity_rad_s: Maximum joint velocity in rad/s (scalar fallback).
+        max_joint_velocity_rad_s_per_joint: Optional per-joint velocity limits in rad/s
+            (URDF order).  When set, overrides ``max_joint_velocity_rad_s`` on a
+            per-joint basis so fast links are not slowed down by thumb limits.
         safe_position_max_velocity_rad_s: Optional separate velocity limit for safe position movements
     """
 
@@ -60,6 +63,7 @@ class ControlConfig:
     # Velocity limiting
     enable_velocity_limiting: bool = True
     max_joint_velocity_rad_s: float = 3.14
+    max_joint_velocity_rad_s_per_joint: list[float] | None = None
     safe_position_max_velocity_rad_s: float | None = None
 
 
