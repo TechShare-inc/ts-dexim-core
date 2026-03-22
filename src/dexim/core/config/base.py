@@ -111,6 +111,72 @@ class RS485ProtocolConfig:
 
 
 @dataclass
+class FilterConfig:
+    """Configuration for joint-angle smoothing filters.
+
+    Three filter types are available, selected via ``type``:
+
+    * ``"wma"`` (default) — Weighted Moving Average (FIR).  Set ``weights``
+      (must sum to 1.0).
+    * ``"ema"`` — Exponential Moving Average (first-order IIR).  Set
+      ``alpha`` in ``(0, 1]``.
+    * ``"one_euro"`` — One Euro Filter (adaptive IIR).  Set ``freq``,
+      ``min_cutoff``, ``beta``, and ``d_cutoff``.
+
+    Attributes:
+        type: Filter algorithm — ``"wma"``, ``"ema"``, or ``"one_euro"``.
+        weights: WMA weights (must sum to 1.0).  Used when ``type="wma"``.
+        alpha: EMA smoothing factor in ``(0, 1]``.  Used when ``type="ema"``.
+        freq: Sampling frequency in Hz.  Used when ``type="one_euro"``.
+        min_cutoff: Minimum cutoff frequency in Hz.  Used when
+            ``type="one_euro"``.
+        beta: Speed coefficient ≥ 0.  Used when ``type="one_euro"``.
+        d_cutoff: Derivative cutoff frequency in Hz.  Used when
+            ``type="one_euro"``.
+    """
+
+    type: str = "wma"
+
+    # WMA parameters
+    weights: list[float] = field(default_factory=lambda: [0.4, 0.3, 0.2, 0.1])
+
+    # EMA parameters
+    alpha: float = 0.3
+
+    # One Euro Filter parameters
+    freq: float = 30.0
+    min_cutoff: float = 1.0
+    beta: float = 0.007
+    d_cutoff: float = 1.0
+
+    def __post_init__(self) -> None:
+        """Validate filter configuration."""
+        allowed = {"wma", "ema", "one_euro"}
+        if self.type not in allowed:
+            raise ValueError(f"type must be one of {allowed}, got {self.type!r}")
+
+        if self.type == "wma":
+            if not isinstance(self.weights, list) or len(self.weights) == 0:
+                raise ValueError("weights must be a non-empty list")
+            if not np.isclose(sum(self.weights), 1.0):
+                raise ValueError(
+                    f"Filter weights must sum to 1.0, got {sum(self.weights)}"
+                )
+        elif self.type == "ema":
+            if not (0.0 < self.alpha <= 1.0):
+                raise ValueError(f"alpha must be in (0, 1], got {self.alpha}")
+        elif self.type == "one_euro":
+            if self.freq <= 0:
+                raise ValueError(f"freq must be positive, got {self.freq}")
+            if self.min_cutoff <= 0:
+                raise ValueError(f"min_cutoff must be positive, got {self.min_cutoff}")
+            if self.beta < 0:
+                raise ValueError(f"beta must be non-negative, got {self.beta}")
+            if self.d_cutoff <= 0:
+                raise ValueError(f"d_cutoff must be positive, got {self.d_cutoff}")
+
+
+@dataclass
 class BaseOffsetConfig:
     """Base offset transformation configuration.
 

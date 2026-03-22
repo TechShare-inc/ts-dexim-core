@@ -18,6 +18,7 @@ PubSubDeviceNode
 
 from __future__ import annotations
 
+from abc import abstractmethod
 from typing import Any
 
 from dexim.core.nodes.managed import ManagedNode
@@ -86,7 +87,25 @@ class SubscriberDeviceNode(DeviceNode):
 
 
 class PubSubDeviceNode(DeviceNode):
-    """Role marker for bidirectional device nodes (read state + write commands).
+    """Base class for bidirectional device nodes (read state + write commands).
+
+    Concrete subclasses must implement :meth:`_run_pipeline` with the full
+    per-iteration control logic.  The default :meth:`_main_loop_iteration`
+    delegates to ``_run_pipeline()`` so subclasses only need to override one
+    method.
 
     Examples: Inspire hand control node, Nova arm control node.
     """
+
+    @abstractmethod
+    def _run_pipeline(self) -> None:
+        """Execute one iteration of the control pipeline.
+
+        Called by :meth:`_main_loop_iteration` on every loop tick.
+        Implement all per-cycle logic here: receive data, compute commands,
+        send to interface, publish observations.
+        """
+
+    def _main_loop_iteration(self) -> None:
+        """Delegate to :meth:`_run_pipeline`."""
+        self._run_pipeline()

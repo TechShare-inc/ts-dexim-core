@@ -5,14 +5,11 @@ that can be controlled by a central orchestrator using ZMQ messaging.
 
 Node Hierarchy:
     ManagedNode: Abstract base for all orchestrator-controlled nodes
-    ├── TeleopNode: Base for robot teleoperation control nodes
-    │   ├── ArmTeleopNode: For arm robots using tracker data (IK-based)
-    │   ├── DualArmTeleopNode: For dual-arm robots (e.g., G1 humanoid)
-    │   └── HandTeleopNode: For hand robots using skeleton data (optimizer-based)
     ├── DeviceNode: Node owning a hardware/simulation interface (disconnect on shutdown)
     │   ├── PublisherDeviceNode: Role marker — publish-only (sensors/cameras)
     │   ├── SubscriberDeviceNode: Role marker — pure-actuator (command sinks)
-    │   └── PubSubDeviceNode: Role marker — bidirectional (read state + write commands)
+    │   └── PubSubDeviceNode: Base for bidirectional nodes (read state + write commands)
+    │       └── Subclass must implement _run_pipeline()
     ├── HardwarePublisherNode: For hardware data publishing nodes
     ├── CommandNode: For command publishing nodes
     └── RecorderNode: For data recording nodes
@@ -28,27 +25,20 @@ Utilities:
     RateLimiter: Precise timing utility for control loops
 
 Example:
-    from dexim.core.nodes import HandTeleopNode
+    from dexim.core.nodes import PubSubDeviceNode
 
-    class DH5ControlNode(HandTeleopNode):
-        def setup(self):
-            self.subscriber = ManusSubscriber(...)
-            self.model = DH5Model(...)
-            self.interface = DH5Interface(...)
+    class MyRobotNode(PubSubDeviceNode):
+        def _run_pipeline(self):
+            # full per-iteration control logic here
+            ...
 
-        def process_data(self, data):
-            skeleton = self._get_skeleton_for_handedness(data)
-            vectors = self._extract_features(skeleton)
-            return self.optimizer.retarget(vectors)
-
-    with DH5ControlNode("dh5_left", config) as node:
+    with MyRobotNode("my_robot") as node:
         node.run()
 """
 
 from __future__ import annotations
 
 # Base node classes
-from dexim.core.nodes.arm_teleop_node import ArmTeleopNode
 from dexim.core.nodes.command_node import CommandNode
 from dexim.core.nodes.device_node import (
     DeviceInterface,
@@ -57,8 +47,6 @@ from dexim.core.nodes.device_node import (
     PubSubDeviceNode,
     SubscriberDeviceNode,
 )
-from dexim.core.nodes.dual_arm_teleop_node import DualArmTeleopNode
-from dexim.core.nodes.hand_teleop_node import HandTeleopNode
 from dexim.core.nodes.hardware_publisher import HardwarePublisherNode
 from dexim.core.nodes.managed import ManagedNode
 
@@ -81,9 +69,6 @@ from dexim.core.nodes.protocols import (
 # Recorder node
 from dexim.core.nodes.recorder_node import RecorderNode
 
-# Teleop node hierarchy
-from dexim.core.nodes.teleop_node import TeleopNode
-
 # Generic typed subscriber (hardware-agnostic replacement for device subscribers)
 from dexim.core.nodes.topic_subscriber import TopicSubscriber
 
@@ -97,11 +82,6 @@ __all__ = [
     "ManagedNode",
     "HardwarePublisherNode",
     "CommandNode",
-    # Teleop node hierarchy
-    "TeleopNode",
-    "ArmTeleopNode",
-    "DualArmTeleopNode",
-    "HandTeleopNode",
     # Device nodes
     "DeviceNode",
     "PublisherDeviceNode",
