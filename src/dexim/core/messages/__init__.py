@@ -8,7 +8,12 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 import msgpack
-from dexim.core.messages.types import HandState, RigidPose, SkeletonJoint
+from dexim.core.messages.types import (
+    FrameObservation,
+    HandState,
+    RigidPose,
+    SkeletonJoint,
+)
 
 # Control/status endpoints
 CTRL_PUB_ENDPOINT = "tcp://localhost:5550"
@@ -53,6 +58,9 @@ class TopicBuilder:
 
         def rigid_pose(self, device_id: str) -> bytes:
             return f"observation/{device_id}/rigid_pose".encode()
+
+        def video_frame(self, device_id: str) -> bytes:
+            return f"observation/{device_id}/video_frame".encode()
 
     def __init__(self) -> None:
         self.action = self._ActionTopics()
@@ -181,6 +189,7 @@ __all__ = [
     "unpack_data_message",
     "pack_status_message",
     # Message types
+    "FrameObservation",
     "HandState",
     "RigidPose",
     "SkeletonJoint",

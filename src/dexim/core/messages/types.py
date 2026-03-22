@@ -277,7 +277,63 @@ class RigidPose:
         )
 
 
+@dataclass
+class FrameObservation:
+    """Observed color/depth frame payload from a sensor device.
+
+    Attributes:
+        device_id: Source camera identifier (node/device id).
+        timestamp: Capture time in seconds (Unix epoch).
+        color: JPEG-compressed color frame bytes.
+        depth: Raw depth frame bytes (uint16 little-endian).
+        width: Frame width in pixels.
+        height: Frame height in pixels.
+        depth_scale: Meters-per-unit scale for depth values.
+        intrinsics: Camera intrinsics dictionary.
+    """
+
+    device_id: str
+    timestamp: float
+    color: bytes
+    depth: bytes
+    width: int
+    height: int
+    depth_scale: float
+    intrinsics: dict[str, float] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to a msgpack-compatible dict."""
+        return {
+            "device_id": self.device_id,
+            "timestamp": self.timestamp,
+            "color": self.color,
+            "depth": self.depth,
+            "width": self.width,
+            "height": self.height,
+            "depth_scale": self.depth_scale,
+            "intrinsics": self.intrinsics,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> FrameObservation:
+        """Deserialize from a msgpack-decoded dict."""
+        intrinsics = d.get("intrinsics", {})
+        return cls(
+            device_id=str(d["device_id"]),
+            timestamp=float(d["timestamp"]),
+            color=bytes(d["color"]),
+            depth=bytes(d["depth"]),
+            width=int(d["width"]),
+            height=int(d["height"]),
+            depth_scale=float(d["depth_scale"]),
+            intrinsics={
+                str(k): float(v) for k, v in intrinsics.items() if isinstance(k, str)
+            },
+        )
+
+
 __all__ = [
+    "FrameObservation",
     "HandState",
     "RigidPose",
     "SkeletonJoint",

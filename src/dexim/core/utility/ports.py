@@ -24,12 +24,12 @@ Example usage:
     # Get data port by index
     port = get_data_port(2)  # Returns 5557
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Optional, Tuple
-import socket
 import re
+import socket
+from dataclasses import dataclass
 
 # =============================================================================
 # Port Constants
@@ -45,8 +45,8 @@ STATUS_PORT: int = 5551
 DATA_PORT_BASE: int = 5555
 
 # Port ranges
-DATA_PORT_RANGE: Tuple[int, int] = (5555, 5599)
-SIM_PORT_RANGE: Tuple[int, int] = (8071, 8099)
+DATA_PORT_RANGE: tuple[int, int] = (5555, 5599)
+SIM_PORT_RANGE: tuple[int, int] = (8071, 8099)
 
 # Default host configurations
 DEFAULT_HOST: str = "localhost"
@@ -60,6 +60,7 @@ NODE_DATA_PORTS: dict[str, int] = {
     "manus": 5555,
     "hand_tracking": 5556,
     "camera": 5557,
+    "realsense": 5568,
     "robot_state": 5558,
     "nova_left": 5559,
     "nova_right": 5560,
@@ -76,6 +77,7 @@ NODE_DATA_PORTS: dict[str, int] = {
 # Dataclasses
 # =============================================================================
 
+
 @dataclass
 class NodePorts:
     """Port configuration for a node.
@@ -88,9 +90,9 @@ class NodePorts:
 
     control: int = CONTROL_PORT
     status: int = STATUS_PORT
-    data: Optional[int] = None
+    data: int | None = None
 
-    def with_data_port(self, data_port: int) -> "NodePorts":
+    def with_data_port(self, data_port: int) -> NodePorts:
         """Return a new NodePorts with the specified data port."""
 
         return NodePorts(
@@ -99,6 +101,7 @@ class NodePorts:
             data=data_port,
         )
 
+
 @dataclass
 class EndpointConfig:
     """ZMQ endpoint configuration for a node.
@@ -106,7 +109,8 @@ class EndpointConfig:
     Attributes:
         control: Control plane endpoint (e.g., "tcp://localhost:5550")
         status: Status plane endpoint (e.g., "tcp://localhost:5551")
-        data: Data plane endpoint (e.g., "tcp://*:5555" for bind, "tcp://localhost:5555" for connect)
+        data: Data plane endpoint (e.g., "tcp://*:5555" for bind,
+            "tcp://localhost:5555" for connect)
     """
 
     control: str
@@ -121,7 +125,7 @@ class EndpointConfig:
         status_port: int = STATUS_PORT,
         host: str = DEFAULT_HOST,
         bind_data: bool = True,
-    ) -> "EndpointConfig":
+    ) -> EndpointConfig:
         """Create endpoint config from port numbers.
 
         Args:
@@ -148,11 +152,12 @@ class EndpointConfig:
         node_type: str,
         host: str = DEFAULT_HOST,
         bind_data: bool = True,
-    ) -> "EndpointConfig":
+    ) -> EndpointConfig:
         """Create endpoint config for a well-known node type.
 
         Args:
-            node_type: Node type key from NODE_DATA_PORTS (e.g., "manus", "hand_tracking")
+            node_type: Node type key from NODE_DATA_PORTS
+                (e.g., "manus", "hand_tracking")
             host: Host address for connect endpoints (default: "localhost")
             bind_data: If True, data endpoint uses "*" for binding
 
@@ -183,9 +188,11 @@ class EndpointConfig:
             "data": self.data,
         }
 
+
 # =============================================================================
 # Port Allocation Functions
 # =============================================================================
+
 
 def get_data_port(node_index: int) -> int:
     """Get data port for a node by index (0-based).
@@ -205,6 +212,7 @@ def get_data_port(node_index: int) -> int:
 
     return DATA_PORT_BASE + node_index
 
+
 def get_node_data_port(node_type: str) -> int:
     """Get the well-known data port for a node type.
 
@@ -223,13 +231,15 @@ def get_node_data_port(node_type: str) -> int:
         raise KeyError(f"Unknown node type '{node_type}'. Available types: {available}")
     return NODE_DATA_PORTS[node_type]
 
+
 # =============================================================================
 # Endpoint Parsing Functions
 # =============================================================================
 
 _ENDPOINT_PATTERN = re.compile(r"^tcp://([^:]+):(\d+)$")
 
-def parse_endpoint(endpoint: str) -> Tuple[str, int]:
+
+def parse_endpoint(endpoint: str) -> tuple[str, int]:
     """Parse a ZMQ endpoint string to extract host and port.
 
     Args:
@@ -258,6 +268,7 @@ def parse_endpoint(endpoint: str) -> Tuple[str, int]:
     port = int(match.group(2))
     return host, port
 
+
 def build_endpoint(host: str, port: int) -> str:
     """Build a ZMQ endpoint string from host and port.
 
@@ -271,9 +282,11 @@ def build_endpoint(host: str, port: int) -> str:
 
     return f"tcp://{host}:{port}"
 
+
 # =============================================================================
 # Port Validation Functions
 # =============================================================================
+
 
 def is_port_available(port: int, host: str = "127.0.0.1") -> bool:
     """Check if a port is available for binding.
@@ -294,6 +307,7 @@ def is_port_available(port: int, host: str = "127.0.0.1") -> bool:
     except OSError:
         return False
 
+
 def is_valid_port(port: int) -> bool:
     """Check if a port number is valid (1-65535).
 
@@ -305,6 +319,7 @@ def is_valid_port(port: int) -> bool:
     """
 
     return 1 <= port <= 65535
+
 
 def is_data_port_in_range(port: int) -> bool:
     """Check if a port is within the designated data port range.
@@ -318,11 +333,12 @@ def is_data_port_in_range(port: int) -> bool:
 
     return DATA_PORT_RANGE[0] <= port <= DATA_PORT_RANGE[1]
 
+
 def find_available_port(
     start: int = DATA_PORT_BASE,
     end: int = DATA_PORT_RANGE[1],
     host: str = "127.0.0.1",
-) -> Optional[int]:
+) -> int | None:
     """Find the next available port in a range.
 
     Args:
@@ -338,6 +354,7 @@ def find_available_port(
         if is_port_available(port, host):
             return port
     return None
+
 
 # =============================================================================
 # Default Endpoint Strings (for backward compatibility)
