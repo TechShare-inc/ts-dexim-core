@@ -14,9 +14,9 @@ requires-python = ">=3.10"
 dependencies = [
     "loguru>=0.7.0",
     "msgpack>=1.0.0",
-    "numpy>=1.24.0",
+    "numpy>=2.2.0",
     "pyyaml>=6.0",
-    "pyzmq>=25.0.0",
+    "pyzmq>=26.0.0",
     "scipy>=1.10.0",
     "viser>=1.0.24",
     "nlopt>=2.7.0",
