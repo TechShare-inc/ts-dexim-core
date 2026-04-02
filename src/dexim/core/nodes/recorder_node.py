@@ -1,5 +1,8 @@
 """RecorderNode - Base class for data recording nodes.
 
+Deprecated: Use ``DataRecorderNode`` from ``dexim.recorder`` directly.
+This module is retained for backward compatibility only.
+
 This module provides the RecorderNode abstract base class for nodes that
 record teleoperation data for training/replay:
 
@@ -33,6 +36,7 @@ from __future__ import annotations
 
 import copy
 import threading
+import warnings
 from abc import abstractmethod
 from collections import defaultdict
 from typing import Any
@@ -91,6 +95,11 @@ class RecorderNode(ManagedNode):
             status_endpoint: Status plane endpoint (defaults to STATUS_PULL_ENDPOINT)
             heartbeat_interval: Seconds between heartbeats
         """
+        warnings.warn(
+            "RecorderNode is deprecated; use DataRecorderNode from dexim.recorder directly.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__(
             node_id=node_id,
             control_endpoint=control_endpoint or CTRL_PUB_ENDPOINT,

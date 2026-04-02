@@ -309,13 +309,13 @@ packages:
 - pypi: ./
   name: dexim-core
   version: 0.1.0
-  sha256: e7915aaffb932752a2a30d2b76d4d5dc974398970efcc90771d146bef6645516
+  sha256: 6b706bfaf4a99cb79c2e3e5da0b18b25212581529c2953956294ff8f0616e96c
   requires_dist:
   - loguru>=0.7.0
   - msgpack>=1.0.0
-  - numpy>=1.24.0
+  - numpy>=2.2.0
   - pyyaml>=6.0
-  - pyzmq>=25.0.0
+  - pyzmq>=26.0.0
   - scipy>=1.10.0
   - viser>=1.0.24
   - nlopt>=2.7.0

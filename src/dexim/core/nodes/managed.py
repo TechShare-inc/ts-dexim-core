@@ -12,14 +12,17 @@ This is the core base class for all orchestrator-controlled nodes.
 from __future__ import annotations
 
 import abc
+import json
 import time
 from typing import Any
 
 import zmq
 from dexim.core.messages import (
+    CTRL_DISCARD_REC,
     CTRL_PAUSE,
     CTRL_PAUSE_PUB,
     CTRL_PUB_ENDPOINT,
+    CTRL_SET_TASK,
     CTRL_SHUTDOWN,
     CTRL_START,
     CTRL_START_PUB,
@@ -130,6 +133,19 @@ class ManagedNode(abc.ABC):
     @abc.abstractmethod
     def on_stop_recording(self) -> None:
         """Called when STOP_REC command is received (recording control)."""
+
+    def on_discard_recording(self) -> None:
+        """Called when DISCARD_REC command is received. Default: no-op.
+
+        Override to discard the current episode buffer without writing.
+        """
+
+    def on_set_task(self, task_info: dict[str, Any]) -> None:
+        """Called when SET_TASK command is received. Default: no-op.
+
+        Args:
+            task_info: Dict with ``task_id`` and ``task_description`` keys.
+        """
 
     # Deprecated hook for backward compatibility
     def on_stop_save(self) -> None:
@@ -279,6 +295,24 @@ class ManagedNode(abc.ABC):
             self.on_stop_recording()
             self.report_status(STATUS_HEALTHY)
             print(f"{self.node_id} stopped recording")
+
+        elif cmd == CTRL_DISCARD_REC:
+            # DISCARD_REC: Discard current episode without writing
+            self.is_recording = False
+            self.on_discard_recording()
+            self.report_status(STATUS_HEALTHY)
+            print(f"{self.node_id} discarded recording")
+
+        elif cmd == CTRL_SET_TASK:
+            # SET_TASK: Update active task metadata (optional JSON payload in frame 2)
+            payload = parts[2] if len(parts) > 2 else b"{}"
+            try:
+                task_info = json.loads(payload)
+            except json.JSONDecodeError:
+                task_info = {}
+            self.on_set_task(task_info)
+            self.report_status(STATUS_HEALTHY)
+            print(f"{self.node_id} task set to {task_info.get('task_id', '')}")
 
         else:
             # Unknown command: ignore but remain healthy
