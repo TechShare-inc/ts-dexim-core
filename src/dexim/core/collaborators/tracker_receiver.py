@@ -1,4 +1,4 @@
-"""TrackerReceiver — RigidPose subscription, type filtering, and reference capture."""
+"""TrackerReceiver — RigidPose subscription and reference capture."""
 
 from __future__ import annotations
 
@@ -14,22 +14,23 @@ _STALE_TRACKER_THRESHOLD_SEC: float = 0.1
 
 
 class TrackerReceiver:
-    """Receives and filters RigidPose messages by tracker type.
+    """Receives a single-tracker RigidPose from a per-tracker topic subscriber.
 
-    Designed for arm control nodes that need 6-DOF rigid-body tracker data.
-    Drains the subscriber queue on each call to ``receive()`` so the control
-    loop always acts on the most recent pose.
+    The subscriber must be constructed with the tracker-type-specific topic
+    (e.g. ``observation/manus/rigid_pose/left_hand``) so that each
+    ``TrackerReceiver`` deals with exactly one physical sensor — no runtime
+    filtering is performed here.
 
     Reference pose capture (``capture_reference()``) is called once on
     START to record the home position of both the tracker and the
     end-effector.
 
     Args:
-        subscriber: Object implementing ``read()`` that returns a dict with
-            a ``"trackers"`` key containing a list of objects that have
-            ``tracker_type`` and ``timestamp`` attributes.  Typically a
-            ``DataSubscriber`` (Manus or compatible mock).
-        tracker_type: Tracker type string to match (e.g. ``"left_hand"``).
+        subscriber: Object implementing ``read()`` that returns a
+            ``RigidPose | None``.  Typically a
+            ``TopicSubscriber[RigidPose]``.
+        tracker_type: Tracker type label used only for log messages
+            (e.g. ``"left_hand"``).
         stale_threshold_sec: Data older than this is rejected.
     """
 
@@ -53,7 +54,7 @@ class TrackerReceiver:
 
     @property
     def tracker_type(self) -> str:
-        """Tracker type string used for filtering."""
+        """Tracker type label used for logging."""
         return self._tracker_type
 
     @property
@@ -76,61 +77,50 @@ class TrackerReceiver:
     # ------------------------------------------------------------------
 
     def receive(self) -> RigidPose | None:
-        """Return the latest non-stale RigidPose matching ``tracker_type``.
+        """Return the latest non-stale RigidPose from the subscriber.
 
-        Reads one data frame from the subscriber and searches for the
-        configured tracker type.  Stale data (older than
+        Reads the most recent frame from the topic-specific subscriber,
+        draining any queued messages. Stale data (older than
         ``stale_threshold_sec``) is silently skipped.
 
         Returns:
-            Matching RigidPose, or None if unavailable or stale.
+            RigidPose, or None if unavailable or stale.
         """
-        result: RigidPose | None = None
         try:
-            data = self._subscriber.read()
-            trackers = data.get("trackers", [])
+            pose: RigidPose | None = self._subscriber.read_latest()
         except Exception as exc:
             logger.error(f"[{self._tracker_type}] Error reading tracker data: {exc}")
             self._no_data_streak += 1
             return None
 
-        now = time.time()
-        for tracker in trackers:
-            if tracker.tracker_type != self._tracker_type:
-                continue
-
-            # Reject stale data
-            if hasattr(tracker, "timestamp") and tracker.timestamp > 0:
-                age = now - tracker.timestamp
-                if age > self._stale_threshold_sec:
-                    logger.debug(
-                        f"[{self._tracker_type}] Skipping stale data "
-                        f"(age={age * 1000:.1f}ms)"
-                    )
-                    continue
-
-            result = tracker
-            break
-
-        if result is not None:
-            self._last_data_age_sec = (
-                now - result.timestamp if result.timestamp > 0 else None
-            )
-            self._no_data_streak = 0
-            if self._last_data_age_sec is not None:
-                logger.debug(
-                    f"[{self._tracker_type}] "
-                    f"data_age={self._last_data_age_sec * 1000:.1f}ms"
-                )
-        else:
+        if pose is None:
             self._no_data_streak += 1
             if self._no_data_streak in (5, 10, 30, 60):
                 logger.warning(
                     f"[{self._tracker_type}] No tracker data for "
                     f"{self._no_data_streak} consecutive frames"
                 )
+            return None
 
-        return result
+        now = time.time()
+        if hasattr(pose, "timestamp") and pose.timestamp > 0:
+            age = now - pose.timestamp
+            if age > self._stale_threshold_sec:
+                logger.debug(
+                    f"[{self._tracker_type}] Skipping stale data "
+                    f"(age={age * 1000:.1f}ms)"
+                )
+                self._no_data_streak += 1
+                return None
+            self._last_data_age_sec = age
+            logger.debug(
+                f"[{self._tracker_type}] data_age={age * 1000:.1f}ms"
+            )
+        else:
+            self._last_data_age_sec = None
+
+        self._no_data_streak = 0
+        return pose
 
     # ------------------------------------------------------------------
     # Reference capture (called on START)
@@ -151,8 +141,7 @@ class TrackerReceiver:
         """
         for attempt in range(attempts):
             try:
-                data = self._subscriber.read()
-                trackers = data.get("trackers", [])
+                pose: RigidPose | None = self._subscriber.read_latest()
             except Exception as exc:
                 logger.debug(
                     f"[{self._tracker_type}] Reference capture attempt "
@@ -161,38 +150,30 @@ class TrackerReceiver:
                 time.sleep(0.05)
                 continue
 
+            if pose is None:
+                logger.debug(
+                    f"[{self._tracker_type}] Reference capture attempt "
+                    f"{attempt + 1}/{attempts}: no fresh data, retrying\u2026"
+                )
+                time.sleep(0.05)
+                continue
+
             now = time.time()
-            found: RigidPose | None = None
-            for tracker in trackers:
-                if tracker.tracker_type != self._tracker_type:
+            if hasattr(pose, "timestamp") and pose.timestamp > 0:
+                age = now - pose.timestamp
+                if age > self._stale_threshold_sec:
+                    logger.debug(
+                        f"[{self._tracker_type}] Attempt {attempt + 1}: "
+                        f"skipping stale data (age={age * 1000:.1f}ms)"
+                    )
                     continue
 
-                if hasattr(tracker, "timestamp") and tracker.timestamp > 0:
-                    age = now - tracker.timestamp
-                    if age > self._stale_threshold_sec:
-                        logger.debug(
-                            f"[{self._tracker_type}] Attempt {attempt + 1}: "
-                            f"skipping stale data (age={age * 1000:.1f}ms)"
-                        )
-                        # Don't sleep — drain queue quickly
-                        continue
-
-                found = tracker
-                break
-
-            if found is not None:
-                self._reference_pose = found
-                logger.info(
-                    f"[{self._tracker_type}] Reference pose captured "
-                    f"(attempt {attempt + 1})"
-                )
-                return True
-
-            logger.debug(
-                f"[{self._tracker_type}] Reference capture attempt "
-                f"{attempt + 1}/{attempts}: no fresh data, retrying…"
+            self._reference_pose = pose
+            logger.info(
+                f"[{self._tracker_type}] Reference pose captured "
+                f"(attempt {attempt + 1})"
             )
-            time.sleep(0.05)
+            return True
 
         logger.warning(
             f"[{self._tracker_type}] Failed to capture reference pose after "

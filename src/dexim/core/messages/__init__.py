@@ -58,7 +58,9 @@ class TopicBuilder:
         def hand_state(self, device_id: str) -> bytes:
             return f"observation/{device_id}/hand_state".encode()
 
-        def rigid_pose(self, device_id: str) -> bytes:
+        def rigid_pose(self, device_id: str, tracker_type: str | None = None) -> bytes:
+            if tracker_type is not None:
+                return f"observation/{device_id}/rigid_pose/{tracker_type}".encode()
             return f"observation/{device_id}/rigid_pose".encode()
 
         def video_frame(self, device_id: str) -> bytes:
