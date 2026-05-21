@@ -24,10 +24,14 @@ from .base import (
     SubscriberConfig,
     InspireConfig,
     InspireRealConfig,
+    TesolloConfig,
+    TesolloRealConfig,
     SimInterfaceConfig,
     RealInterfaceConfig,
     TCPIPProtocolConfig,
     RS485ProtocolConfig,
+    MODBUSTCPProtocolConfig,
+    MODBUSRTUProtocolConfig,
     G1Config,
     G1RealConfig,
     CameraConfig,
@@ -122,6 +126,7 @@ def _parse_interface(
         dh5 = None
         inspire = None
         g1 = None
+        tesollo = None
 
         if hardware == "nova":
             nova_src = dict(interface_dict.get("nova", {}))
@@ -192,6 +197,32 @@ def _parse_interface(
                 rs485=rs485,
                 modbus_id=insp_src.get("modbus_id"),
             )
+        elif hardware == "tesollo":
+            teso_src = dict(interface_dict.get("tesollo", {}))
+            modbustcp = None
+            modbusrtu = None
+            if "modbustcp" in teso_src:
+                modbustcp = MODBUSTCPProtocolConfig(**teso_src.get("modbustcp", {}))
+            elif "ip" in teso_src or "port" in teso_src:
+                modbustcp_kwargs = {
+                    k: v for k, v in teso_src.items() if k in ("ip", "port")
+                }
+                modbustcp = MODBUSTCPProtocolConfig(**modbustcp_kwargs)
+
+            if "modbusrtu" in teso_src:
+                modbusrtu = MODBUSRTUProtocolConfig(**teso_src.get("rs485", {}))
+            elif "serial_port" in teso_src or "baud" in teso_src:
+                modbusrtu_kwargs = {
+                    k: v for k, v in teso_src.items() if k in ("serial_port", "baud")
+                }
+                modbusrtu = MODBUSRTUProtocolConfig(**modbusrtu_kwargs)
+
+            tesollo = TesolloRealConfig(
+                protocol=teso_src.get("protocol", "modbustcp"),
+                modbustcp=modbustcp,
+                modbusrtu=modbusrtu,
+                modbus_id=teso_src.get("modbus_id"),
+            )
         elif hardware == "unitree_g1":
             g1_src = dict(interface_dict.get("g1", {}))
             g1 = G1RealConfig(
@@ -206,7 +237,7 @@ def _parse_interface(
             raise ValueError(f"Unknown hardware for interface.real: {hardware}")
 
         real = RealInterfaceConfig(
-            hardware=hardware, nova=nova, dh5=dh5, inspire=inspire, g1=g1
+            hardware=hardware, nova=nova, dh5=dh5, inspire=inspire, tesollo = tesollo, g1=g1
         )
         return InterfaceConfig(mode="real", real=real)
 
@@ -234,6 +265,7 @@ def _dict_to_control_config(config_dict: Dict[str, Any]) -> ControlNodeConfig:
     nova_config = None
     inspire_config = None
     g1_config = None
+    tesollo_config = None
 
     if robot_type == "dh5" and "dh5" in config_dict:
         dh5_config = DH5Config(**config_dict["dh5"])
@@ -249,6 +281,9 @@ def _dict_to_control_config(config_dict: Dict[str, Any]) -> ControlNodeConfig:
     elif robot_type == "inspire" and "inspire" in config_dict:
         inspire_dict = config_dict["inspire"]
         inspire_config = InspireConfig(**inspire_dict)
+    elif robot_type == "tesollo" and "tesollo" in config_dict:
+        tesollo_dict = config_dict["tesollo"]
+        tesollo_config = TesolloConfig(**tesollo_dict)
     elif robot_type == "unitree_g1" and "g1" in config_dict:
         g1_dict = dict(config_dict["g1"])
 
@@ -267,6 +302,7 @@ def _dict_to_control_config(config_dict: Dict[str, Any]) -> ControlNodeConfig:
         dh5=dh5_config,
         nova=nova_config,
         inspire=inspire_config,
+        tesollo=tesollo_config,
         g1=g1_config,
     )
 
@@ -373,7 +409,7 @@ def validate_config(config: Union[ControlNodeConfig, HandTrackingConfig]) -> boo
         return True
 
     # Handle ControlNodeConfig
-    if config.robot_type not in ["dh5", "nova", "inspire", "unitree_g1"]:
+    if config.robot_type not in ["dh5", "nova", "inspire", "tesollo", "unitree_g1"]:
         raise ValueError(f"Invalid robot_type: {config.robot_type}")
 
     if config.control.rate_hz <= 0:
@@ -392,6 +428,11 @@ def validate_config(config: Union[ControlNodeConfig, HandTrackingConfig]) -> boo
         if config.inspire and config.inspire.handedness not in ["left", "right"]:
             raise ValueError(
                 f"InspireConfig.handedness must be 'left' or 'right', got {config.inspire.handedness}"
+            )
+    if config.robot_type == "tesollo":
+        if config.tesollo and config.tesollo.handedness not in ["left", "right"]:
+            raise ValueError(
+                f"TesolloConfig.handedness mustbe 'left' or 'right', got {config.tesollo.handedness}"
             )
     if config.robot_type == "unitree_g1":
         if config.g1 and len(config.g1.home_joints_deg) != 14:

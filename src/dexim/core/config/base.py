@@ -109,6 +109,30 @@ class RS485ProtocolConfig:
     port: str = "/dev/ttyUSB0"
     baud: int = 115200
 
+@dataclass
+class MODBUSTCPProtocolConfig:
+    """MODBUSTCP protocol configuration.
+    
+    Attributes:
+        ip: Ip address (e.g., "192.168.5.1")
+        port: Modbustcp port (default: 502)
+    """
+
+    ip: str = "192.168.5.72"
+    port: int = 502
+
+@dataclass
+class MODBUSRTUProtocolConfig:
+    """MODBUSRTU protocol configuration.
+    
+    Attributes:
+        port: Serial port (e.g., "COM8")
+        baud: Baud rate
+    """
+
+    serial_port: str = "COM8"
+    baud: int = 115200
+
 
 @dataclass
 class FilterConfig:
@@ -368,6 +392,80 @@ class InspireConfig:
 
 
 # =============================================================================
+# Tesollo-specific configurations
+# =============================================================================
+
+
+@dataclass
+class TesolloRealConfig:
+    """Tesollo-specific real-hardware interface fields."""
+
+    protocol: str = "modbustcp"  # 'modbustcp' or 'modbusrtu'
+
+    modbustcp: MODBUSTCPProtocolConfig | None = None
+    modbusrtu: MODBUSRTUProtocolConfig | None = None
+
+    modbus_id: int | None = None
+
+    def __post_init__(self):
+        allowed = {"modbustcp", "modbusrtu"}
+        if self.protocol not in allowed:
+            raise ValueError(
+                f"Invalid protocol for TesolloRealConfig: {self.protocol}. Must be one of {allowed}"
+            )
+
+        if self.protocol == "modbustcp" and self.modbustcp is None:
+            raise ValueError(
+                "TesolloRealConfig.protocol='modbustcp' requires a non-None 'modbustcp' field"
+            )
+        if self.protocol == "modbusrtu" and self.modbusrtu is None:
+            raise ValueError(
+                "TesolloRealConfig.protocol='modbusrtu' requires a non-None 'modbusrtu' field"
+            )
+
+    def get_connection_info(self) -> dict[str, Any]:
+        """Return a normalized dict describing the active connection."""
+
+        if self.protocol == "modbustcp":
+            assert self.modbustcp is not None
+            return {"type": "modbustcp", "ip": self.modbustcp.ip, "port": self.modbustcp.port}
+        assert self.modbusrtu is not None
+        return {
+            "type": "modbusrtu",
+            "port": self.modbusrtu.serial_port,
+            "baud": self.modbusrtu.baud,
+            "modbus_id": self.modbus_id,
+        }
+
+
+@dataclass
+class TesolloConfig:
+    """Tesollo hand-specific configuration."""
+
+    feature_extraction: dict[str, Any] = field(
+        default_factory=lambda: {
+            "src_indices": [1, 6, 11, 16, 21],
+            "dst_indices": [4, 9, 14, 19, 24],
+            "apply_rotation": True,
+        }
+    )
+
+    alpha: list[float] = field(default_factory=lambda: [1.0] * 5)
+    handedness: str = "left"
+    active_dofs_override: int | None = None
+
+    def __post_init__(self):
+        if self.handedness not in ["left", "right"]:
+            raise ValueError(
+                f"Invalid handedness for TesolloConfig: {self.handedness}. Must be 'left' or 'right'"
+            )
+
+        if not isinstance(self.alpha, list) or len(self.alpha) != 5:
+            raise ValueError(
+                f"InspireConfig.alpha must be a list of 5 floats, got: {self.alpha}"
+            )
+
+# =============================================================================
 # DH5-specific configurations
 # =============================================================================
 
@@ -546,15 +644,16 @@ class RealInterfaceConfig:
     """
 
     mode: str = "real"
-    hardware: str = "nova"  # one of: 'nova', 'dh5', 'inspire', 'unitree_g1'
+    hardware: str = "nova"  # one of: 'nova', 'dh5', 'inspire', 'tesollo, 'unitree_g1'
 
     nova: NovaRealConfig | None = None
     dh5: DH5RealConfig | None = None
     inspire: InspireRealConfig | None = None
+    tesollo: TesolloRealConfig | None = None
     g1: G1RealConfig | None = None
 
     def __post_init__(self):
-        allowed = {"nova", "dh5", "inspire", "unitree_g1"}
+        allowed = {"nova", "dh5", "inspire", "tesollo", "unitree_g1"}
         if self.hardware not in allowed:
             raise ValueError(
                 f"Invalid hardware for RealInterfaceConfig: {self.hardware}. Must be one of {allowed}"
@@ -569,6 +668,10 @@ class RealInterfaceConfig:
         if self.hardware == "inspire" and self.inspire is None:
             raise ValueError(
                 "RealInterfaceConfig.hardware='inspire' requires 'inspire' field"
+            )
+        if self.hardware == "tesollo" and self.tesollo is None:
+            raise ValueError(
+                "RealInterfaceConfig.hardware='tesollo' requires 'tesollo' field"
             )
         if self.hardware == "unitree_g1" and self.g1 is None:
             raise ValueError(
@@ -751,7 +854,7 @@ class HandTrackingConfig:
 class ControlNodeConfig:
     """Complete configuration for a control node."""
 
-    robot_type: str  # "dh5", "nova", "inspire", or "unitree_g1"
+    robot_type: str  # "dh5", "nova", "inspire", "tesollo", or "unitree_g1"
 
     subscriber: SubscriberConfig = field(default_factory=SubscriberConfig)
     interface: InterfaceConfig = field(default_factory=InterfaceConfig)
@@ -761,14 +864,15 @@ class ControlNodeConfig:
     dh5: DH5Config | None = None
     nova: NovaConfig | None = None
     inspire: InspireConfig | None = None
+    tesollo: TesolloConfig | None = None
     g1: G1Config | None = None
 
     def __post_init__(self):
         """Validate configuration after initialization."""
 
-        if self.robot_type not in ["dh5", "nova", "inspire", "unitree_g1"]:
+        if self.robot_type not in ["dh5", "nova", "inspire", "tesollo", "unitree_g1"]:
             raise ValueError(
-                f"Invalid robot_type: {self.robot_type}. Must be 'dh5', 'nova', 'inspire', or 'unitree_g1'"
+                f"Invalid robot_type: {self.robot_type}. Must be 'dh5', 'nova', 'inspire', 'tesollo', or 'unitree_g1'"
             )
 
         # Initialize robot-specific config if not provided
@@ -778,6 +882,8 @@ class ControlNodeConfig:
             self.nova = NovaConfig()
         elif self.robot_type == "inspire" and self.inspire is None:
             self.inspire = InspireConfig()
+        elif self.robot_type == "tesollo" and self.tesollo is None:
+            self.tesollo = TesolloConfig()
         elif self.robot_type == "unitree_g1" and self.g1 is None:
             self.g1 = G1Config()
 
@@ -791,6 +897,8 @@ class ControlNodeConfig:
             return self.nova
         elif self.robot_type == "inspire":
             return self.inspire
+        elif self.robot_type == "tesollo":
+            return self.tesollo
         elif self.robot_type == "unitree_g1":
             return self.g1
         else:

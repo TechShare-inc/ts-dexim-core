@@ -32,6 +32,9 @@ from .base import (
     G1RealConfig,
     HandTrackingConfig,
     InspireConfig,
+    # Tesollo configs,
+    TesolloRealConfig,
+    TesolloConfig,
     # Inspire configs
     InspireRealConfig,
     InterfaceConfig,
@@ -47,6 +50,8 @@ from .base import (
     # Base configs
     SubscriberConfig,
     TCPIPProtocolConfig,
+    MODBUSTCPProtocolConfig,
+    MODBUSRTUProtocolConfig,
 )
 from .loader import (
     config_to_dict,
@@ -66,12 +71,17 @@ __all__ = [
     "TCPIPProtocolConfig",
     "RS485ProtocolConfig",
     "BaseOffsetConfig",
+    "MODBUSTCPProtocolConfig",
+    "MODBUSRTUProtocolConfig",
     # Nova configs
     "NovaRealConfig",
     "NovaConfig",
     # Inspire configs
     "InspireRealConfig",
     "InspireConfig",
+    # Tesollo configs,
+    "TesolloRealConfig",
+    "TesolloConfig",
     # DH5 configs
     "DH5RealConfig",
     "DH5Config",
