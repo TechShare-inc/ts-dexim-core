@@ -261,7 +261,7 @@ class NovaConfig:
     handedness: str = "left"  # "left" or "right" - determines tracker name only
     calibration_file: str | None = None  # Path to calibration JSON
     home_joints_deg: list[float] = field(
-        default_factory=lambda: [0.0] * 6
+        default_factory=lambda: [0.0, -80.0, -10.0, 90.0, 90.0, 0.0]
     )  # Joint angles in degrees
     base_offset: BaseOffsetConfig | None = None
 
