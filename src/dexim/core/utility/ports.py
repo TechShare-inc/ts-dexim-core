@@ -60,7 +60,10 @@ NODE_DATA_PORTS: dict[str, int] = {
     "manus": 5555,
     "hand_tracking": 5556,
     "camera": 5557,
-    "realsense": 5568,
+    "realsense": 5568,  # legacy alias for realsense_left
+    "realsense_left": 5568,
+    "realsense_right": 5569,
+    "realsense_ego": 5570,
     "robot_state": 5558,
     "nova_left": 5559,
     "nova_right": 5560,
