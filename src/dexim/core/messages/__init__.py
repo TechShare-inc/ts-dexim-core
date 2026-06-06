@@ -55,7 +55,9 @@ class TopicBuilder:
         def joint_state(self, device_id: str) -> bytes:
             return f"observation/{device_id}/joint_state".encode()
 
-        def hand_state(self, device_id: str) -> bytes:
+        def hand_state(self, device_id: str, side: str | None = None) -> bytes:
+            if side is not None:
+                return f"observation/{device_id}/hand_state/{side}".encode()
             return f"observation/{device_id}/hand_state".encode()
 
         def rigid_pose(self, device_id: str, tracker_type: str | None = None) -> bytes:
