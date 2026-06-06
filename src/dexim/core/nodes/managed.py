@@ -24,6 +24,7 @@ from dexim.core.messages import (
     CTRL_PUB_ENDPOINT,
     CTRL_SET_TASK,
     CTRL_SHUTDOWN,
+    CTRL_STANDBY,
     CTRL_START,
     CTRL_START_PUB,
     CTRL_START_REC,
@@ -36,6 +37,7 @@ from dexim.core.messages import (
     STATUS_PAUSED,
     STATUS_PULL_ENDPOINT,
     STATUS_SHUTTING_DOWN,
+    STATUS_STANDBY,
     STATUS_STARTED,
     TOPIC_CTRL,
     pack_status_message,
@@ -84,9 +86,10 @@ class ManagedNode(abc.ABC):
     # Public lifecycle
     # ----------------------
     def run(self) -> None:
-        """Main loop: poll control, iterate subclass work, send heartbeats."""
+        """Main loop: enter standby, poll control, iterate subclass work, send heartbeats."""
         self.running = True
-        self.report_status(STATUS_STARTED)
+        self.on_standby()
+        self.report_status(STATUS_STANDBY)
 
         try:
             while self.running:
@@ -110,6 +113,19 @@ class ManagedNode(abc.ABC):
     # ----------------------
     # Abstract hooks
     # ----------------------
+    @abc.abstractmethod
+    def on_standby(self) -> None:
+        """Called when entering STANDBY state (on run() entry or CTRL_STANDBY command).
+
+        The node is in a ready-but-idle state: interface connected, main loop
+        running, but teleoperation is not active.  This is the default state
+        after ``run()`` is called and before ``CTRL_START`` is received.
+
+        Subclasses should connect hardware interfaces and perform one-time
+        setup that does not require runtime data (e.g., tracker reference
+        poses).  Publishing should remain deactivated.
+        """
+
     @abc.abstractmethod
     def on_start(self) -> None:
         """Called when START command is received (node lifecycle)."""
@@ -171,6 +187,7 @@ class ManagedNode(abc.ABC):
 
         # Status: PUSH
         push = ctx.socket(zmq.PUSH)
+        push.setsockopt(zmq.SNDHWM, 10)  # Prevent unbounded buffering when no consumer
         push.connect(self._status_endpoint)
         self._push_status = push
 
@@ -256,6 +273,15 @@ class ManagedNode(abc.ABC):
             self.report_status(STATUS_PAUSED)
             print(f"{self.node_id} stopped (safe position)")
 
+        elif cmd == CTRL_STANDBY:
+            # STANDBY: Return to ready-but-idle state (keep interface connected).
+            if self._teleop_active:
+                self._teleop_active = False
+                self.is_publishing = False
+            self.on_standby()
+            self.report_status(STATUS_STANDBY)
+            print(f"{self.node_id} entered standby")
+
         elif cmd == CTRL_START_PUB:
             # START_PUB: Resume publishing
             self.is_publishing = True
@@ -334,8 +360,15 @@ class ManagedNode(abc.ABC):
             timestamp=time.time(),
             info={"is_publishing": self.is_publishing, **(info or {})},
         )
-        # Status plane is PUSH → PULL; single frame payload
-        self._push_status.send(payload, flags=zmq.DONTWAIT)
+        # Status plane is PUSH → PULL; single frame payload.
+        # DONTWAIT + low SNDHWM means this drops silently when no
+        # orchestrator is consuming status messages — non-fatal.
+        try:
+            self._push_status.send(payload, flags=zmq.DONTWAIT)
+        except zmq.Again:
+            pass  # Expected when no PULL consumer or buffer is full
+        except zmq.ZMQError:
+            pass  # Socket may be in a bad state during shutdown
 
     def send_heartbeat_if_needed(self) -> None:
         now = time.time()

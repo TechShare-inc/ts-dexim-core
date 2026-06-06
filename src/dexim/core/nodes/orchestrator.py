@@ -145,6 +145,7 @@ class TeleopOrchestrator:
 
         # Control Plane: PUB socket (bind)
         self._pub_control = self._ctx.socket(zmq.PUB)  # type: ignore
+        self._pub_control.setsockopt(zmq.SNDHWM, 100)
         # Replace localhost with 0.0.0.0 for binding
         bind_addr = self.control_endpoint.replace("localhost", "0.0.0.0")
         if bind_addr.startswith("tcp://*"):

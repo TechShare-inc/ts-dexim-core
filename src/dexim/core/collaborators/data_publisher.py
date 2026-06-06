@@ -33,6 +33,7 @@ class DataPlanePublisher:
         ctx = zmq.Context.instance()
         pub: zmq.Socket = ctx.socket(zmq.PUB)
         pub.setsockopt(zmq.LINGER, 0)
+        pub.setsockopt(zmq.SNDHWM, 100)  # Drop when no subscriber; prevent unbounded buffering
         if bind:
             pub.bind(data_endpoint)
         else:
@@ -122,5 +123,8 @@ class DataPlanePublisher:
         try:
             topic_frame, payload_frame = pack_data_message(topic, time.time(), data)
             self._pub.send_multipart([topic_frame, payload_frame], flags=zmq.DONTWAIT)
+        except zmq.Again:
+            # Non-fatal: no subscriber or HWM reached; message dropped.
+            pass
         except Exception as exc:
             logger.debug(f"Failed to send on topic {topic}: {exc}")
