@@ -165,8 +165,16 @@ class MotionController:
             timeout_sec: Maximum movement duration.
 
         Returns:
-            True if target reached, False on timeout.
+            True if target reached, False on timeout or when interface is
+            unavailable.
         """
+        # Guard: if the interface is already disconnected we cannot move.
+        if not self._interface.is_connected():
+            logger.warning(
+                "Cannot move to safe position: interface is not connected"
+            )
+            return False
+
         try:
             current = self._interface.read().q
         except Exception as exc:

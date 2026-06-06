@@ -275,7 +275,10 @@ class ManagedNode(abc.ABC):
             print(f"{self.node_id} publishing stopped")
 
         elif cmd == CTRL_SHUTDOWN:
-            # SHUTDOWN: Node stops and exits
+            # SHUTDOWN: Stop teleop safely, then exit.
+            if self._teleop_active:
+                self._teleop_active = False
+                self.on_stop()
             self.is_recording = False
             self.running = False
             # on_shutdown called in finally of run()
