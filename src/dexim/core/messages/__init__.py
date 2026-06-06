@@ -42,6 +42,7 @@ STATUS_PAUSED = "PAUSED"
 STATUS_HEALTHY = "HEALTHY"
 STATUS_ERROR = "ERROR"
 STATUS_SHUTTING_DOWN = "SHUTTING_DOWN"
+STATUS_STARTING = "STARTING"
 
 
 class TopicBuilder:
@@ -190,6 +191,7 @@ __all__ = [
     "STATUS_HEALTHY",
     "STATUS_ERROR",
     "STATUS_SHUTTING_DOWN",
+    "STATUS_STARTING",
     # Topic helpers
     "TopicBuilder",
     "TopicValidator",
