@@ -134,6 +134,10 @@ class CommandNode(ManagedNode):
     # ----------------------
     # ManagedNode lifecycle hooks
     # ----------------------
+    def on_standby(self) -> None:
+        """Called when entering STANDBY state."""
+        logger.info(f"{self.node_id} entering standby")
+
     def on_start(self) -> None:
         """Called when START command is received."""
         logger.info(f"{self.node_id} started")

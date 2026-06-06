@@ -631,6 +631,15 @@ class RobotControlNode(ManagedNode, ABC):
     # ----------------------
     # ManagedNode lifecycle hooks
     # ----------------------
+    def on_standby(self) -> None:
+        """Called when entering STANDBY state (on run() or CTRL_STANDBY).
+
+        Initializes the control loop (signal handlers, velocity limiting
+        state) so the node is ready for a fast CTRL_START transition.
+        """
+        logger.info(f"{self.node_id} entering STANDBY — control loop initializing")
+        self._initialize_control_loop()
+
     def on_start(self) -> None:
         """Called when START command is received.
 

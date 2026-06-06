@@ -74,6 +74,11 @@ class HardwarePublisherNode(ManagedNode):
     # ----------------------
     # ManagedNode hooks
     # ----------------------
+    def on_standby(self) -> None:
+        """Enter STANDBY: prepare tick schedule for fast START."""
+        if self._rate_hz and self._rate_hz > 0:
+            self._next_tick_ts = time.time()
+
     def on_start(self) -> None:
         # Reset tick schedule on start
         if self._rate_hz and self._rate_hz > 0:

@@ -221,6 +221,12 @@ class RecorderNode(ManagedNode):
     # ----------------------
     # ManagedNode hooks
     # ----------------------
+    def on_standby(self) -> None:
+        """Enter STANDBY: clear buffers for a fresh session."""
+        with self._buffer_lock:
+            self._buffers.clear()
+        logger.info(f"{self.node_id} entering standby — buffers cleared")
+
     def on_start(self) -> None:
         """Called when START command is received.
 

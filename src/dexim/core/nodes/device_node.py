@@ -51,6 +51,25 @@ class DeviceNode(ManagedNode):
 
     interface: Any
 
+    def on_standby(self) -> None:
+        """Connect the device interface so the node is ready for a fast START.
+
+        Called when ``run()`` begins and on ``CTRL_STANDBY``.  Subclasses
+        may override to add standby-specific setup, but must call
+        ``super().on_standby()`` to ensure the interface is connected.
+
+        Raises:
+            Nothing — all exceptions from ``connect()`` are swallowed and
+            logged at DEBUG level.
+        """
+        try:
+            self.interface.connect()
+        except Exception as exc:  # noqa: BLE001
+            from loguru import logger
+
+            logger.debug(f"{self.node_id} interface.connect() in standby raised: {exc}")
+        super().on_standby()
+
     def on_shutdown(self) -> None:
         """Disconnect the device interface, then delegate to super().
 
