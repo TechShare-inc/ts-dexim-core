@@ -248,9 +248,16 @@ class ManagedNode(abc.ABC):
             return  # Don't auto-prepare during countdown
 
         if not self._teleop_active:
-            self._auto_prepare()
+            auto_cmd = self._auto_prepare()
+            if auto_cmd == CTRL_START:
+                # Auto-start: transition to RUNNING without countdown.
+                self.on_start()
+                self._teleop_active = True
+                self.is_publishing = True
+                self.report_status(STATUS_STARTED)
+                print(f"{self.node_id} auto-started — {auto_cmd}")
 
-    def _auto_prepare(self) -> None:
+    def _auto_prepare(self) -> str | None:
         """Override in subclasses to perform automatic preparation during STANDBY.
 
         Called each tick while the node is in STANDBY (no countdown active,
@@ -258,8 +265,15 @@ class ManagedNode(abc.ABC):
         subsystems, or log readiness status — everything that should happen
         automatically without waiting for ``CTRL_START``.
 
-        Default: no-op.
+        When the node is ready to run, return a control command string
+        (e.g., ``CTRL_START``) to trigger an automatic transition.  The
+        transition bypasses any countdown so the node moves directly to
+        RUNNING.
+
+        Returns:
+            A control command to auto-apply, or ``None`` to stay in STANDBY.
         """
+        return None
 
     # ----------------------
     # ZMQ setup/teardown
