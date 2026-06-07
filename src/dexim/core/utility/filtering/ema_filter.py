@@ -6,12 +6,12 @@ A first-order IIR low-pass filter:
 
 Compared to ``WeightedMovingFilter`` (FIR):
 
-* **Lower lag** — responds in one sample, not after the window fills.
-* **No warm-up** — produces valid output immediately.
-* **Single parameter** — ``alpha`` in ``(0, 1]``:
-  - ``alpha = 1.0`` → pass-through (no smoothing).
-  - ``alpha = 0.3`` → moderate smoothing (~2 frame time constant at 30 Hz).
-  - ``alpha = 0.1`` → heavy smoothing (~9 frame time constant at 30 Hz).
+* **Lower lag** -- responds in one sample, not after the window fills.
+* **No warm-up** -- produces valid output immediately.
+* **Single parameter** -- ``alpha`` in ``(0, 1]``:
+  - ``alpha = 1.0`` -> pass-through (no smoothing).
+  - ``alpha = 0.3`` -> moderate smoothing (~2 frame time constant at 30 Hz).
+  - ``alpha = 0.1`` -> heavy smoothing (~9 frame time constant at 30 Hz).
 """
 
 from __future__ import annotations

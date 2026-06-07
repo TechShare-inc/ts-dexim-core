@@ -1,4 +1,4 @@
-"""SkeletonReceiver — HandState subscription and glove-ID filtering."""
+"""SkeletonReceiver -- HandState subscription and glove-ID filtering."""
 
 from __future__ import annotations
 

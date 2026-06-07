@@ -1,4 +1,4 @@
-"""TrackerReceiver — RigidPose subscription and reference capture."""
+"""TrackerReceiver -- RigidPose subscription and reference capture."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from dexim.core.messages import RigidPose
 from loguru import logger
 
 # Reject data older than this to avoid stale buffered poses.
-# At 60 Hz a frame is produced every ~17 ms, so 100 ms ≈ 6 dropped frames.
+# At 60 Hz a frame is produced every ~17 ms, so 100 ms ~= 6 dropped frames.
 _STALE_TRACKER_THRESHOLD_SEC: float = 0.1
 
 
@@ -18,7 +18,7 @@ class TrackerReceiver:
 
     The subscriber must be constructed with the tracker-type-specific topic
     (e.g. ``observation/manus/rigid_pose/left_hand``) so that each
-    ``TrackerReceiver`` deals with exactly one physical sensor — no runtime
+    ``TrackerReceiver`` deals with exactly one physical sensor -- no runtime
     filtering is performed here.
 
     Reference pose capture (``capture_reference()``) is called once on

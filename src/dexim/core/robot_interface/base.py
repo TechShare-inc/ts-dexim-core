@@ -7,8 +7,8 @@ from typing import Protocol, TypeVar
 import numpy as np
 
 # TypeVars for the generic sensor/actuator protocols.
-# TState: covariant — only produced by read() (return type).
-# TCmd:   contravariant — only consumed by write() (parameter type).
+# TState: covariant -- only produced by read() (return type).
+# TCmd:   contravariant -- only consumed by write() (parameter type).
 TState = TypeVar("TState", covariant=True)
 TCmd = TypeVar("TCmd", contravariant=True)
 
@@ -19,7 +19,7 @@ class DeviceInterface(Protocol[TState, TCmd]):
     The common base for any hardware or simulation device that both
     produces state (``read()``) and consumes commands (``write()``).
     ``RobotInterface`` is the canonical specialisation that pins
-    ``TState → JointState`` and ``TCmd → JointCommand``.
+    ``TState -> JointState`` and ``TCmd -> JointCommand``.
 
     Type parameters:
         TState: The observable state type returned by ``read()``.

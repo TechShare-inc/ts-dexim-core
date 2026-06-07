@@ -84,10 +84,10 @@ class TopicBuilder:
 # import them directly.  New code should use TopicBuilder instead.
 # ---------------------------------------------------------------------------
 
-#: Deprecated – use ``TopicBuilder().observation.hand_state(node_id)``
+#: Deprecated - use ``TopicBuilder().observation.hand_state(node_id)``
 TOPIC_MANUS_RAW_SKELETONS = b"observation/manus/manus_raw_skeletons"
 
-#: Deprecated – use ``TopicBuilder().observation.rigid_pose(node_id)``
+#: Deprecated - use ``TopicBuilder().observation.rigid_pose(node_id)``
 TOPIC_MANUS_TRACKERS = b"observation/manus/manus_trackers"
 
 

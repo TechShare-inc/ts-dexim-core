@@ -1,4 +1,4 @@
-"""dexim.core — DexImitate framework foundation package.
+"""dexim.core -- DexImitate framework foundation package.
 
 Provides the framework-level building blocks shared across all robot packages:
 

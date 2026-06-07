@@ -1,4 +1,4 @@
-"""MotionController — rate limiting, velocity limiting, timeout, and safe position."""
+"""MotionController -- rate limiting, velocity limiting, timeout, and safe position."""
 
 from __future__ import annotations
 
@@ -143,7 +143,7 @@ class MotionController:
         """Sleep to maintain target rate.
 
         Returns:
-            Timing dict from RateLimiter (keys: elapsed, overtime, jitter, …).
+            Timing dict from RateLimiter (keys: elapsed, overtime, jitter, ...).
         """
         return self.rate_limiter.sleep()
 

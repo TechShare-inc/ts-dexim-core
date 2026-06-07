@@ -336,7 +336,7 @@ class VectorOptimizer:
             input_features_tensor, robot_features_tensor, delta=1.0, reduction="sum"
         )
 
-        # Add temporal consistency penalty: β * ||q_t - q_{t-1}||^2
+        # Add temporal consistency penalty: beta * ||q_t - q_{t-1}||^2
         q_prev_tensor = torch.as_tensor(q_init).requires_grad_()
         q_curr_tensor = torch.as_tensor(q_curr).requires_grad_()
         temporal_penalty = self.beta * torch.sum((q_curr_tensor - q_prev_tensor) ** 2)
@@ -344,7 +344,7 @@ class VectorOptimizer:
 
         result = total_loss.cpu().detach().item()
 
-        # Backward pass: compute gradient ∂loss/∂q
+        # Backward pass: compute gradient dLoss/dq
         if grad.size > 0:
             total_loss.backward()
 
@@ -366,7 +366,7 @@ class VectorOptimizer:
                 # Extract linear velocity part (3 x nv)
                 J_positions_q[i * 3 : (i + 1) * 3, :] = frame_jacobian[:3, :]
 
-            # Chain rule: ∂loss/∂q = ∂loss/∂positions @ ∂positions/∂q
+            # Chain rule: dLoss/dq = dLoss/dPositions @ dPositions/dq
             if src_positions_tensor.grad is None or dst_positions_tensor.grad is None:
                 self.logger.error("Gradient is None - this should not happen")
                 return float("inf")

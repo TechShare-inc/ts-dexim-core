@@ -1,4 +1,4 @@
-"""JointFilter — pluggable per-joint smoothing."""
+"""JointFilter -- pluggable per-joint smoothing."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""dexim.core.collaborators — shared pipeline collaborators for robot control nodes.
+"""dexim.core.collaborators -- shared pipeline collaborators for robot control nodes.
 
 Each collaborator handles one concern in the control pipeline and can be
 composed freely by any robot package (arm or hand):

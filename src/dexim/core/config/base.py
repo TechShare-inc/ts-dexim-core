@@ -119,21 +119,21 @@ class FilterConfig:
 
     Three filter types are available, selected via ``type``:
 
-    * ``"wma"`` (default) — Weighted Moving Average (FIR).  Set ``weights``
+    * ``"wma"`` (default) -- Weighted Moving Average (FIR).  Set ``weights``
       (must sum to 1.0).
-    * ``"ema"`` — Exponential Moving Average (first-order IIR).  Set
+    * ``"ema"`` -- Exponential Moving Average (first-order IIR).  Set
       ``alpha`` in ``(0, 1]``.
-    * ``"one_euro"`` — One Euro Filter (adaptive IIR).  Set ``freq``,
+    * ``"one_euro"`` -- One Euro Filter (adaptive IIR).  Set ``freq``,
       ``min_cutoff``, ``beta``, and ``d_cutoff``.
 
     Attributes:
-        type: Filter algorithm — ``"wma"``, ``"ema"``, or ``"one_euro"``.
+        type: Filter algorithm -- ``"wma"``, ``"ema"``, or ``"one_euro"``.
         weights: WMA weights (must sum to 1.0).  Used when ``type="wma"``.
         alpha: EMA smoothing factor in ``(0, 1]``.  Used when ``type="ema"``.
         freq: Sampling frequency in Hz.  Used when ``type="one_euro"``.
         min_cutoff: Minimum cutoff frequency in Hz.  Used when
             ``type="one_euro"``.
-        beta: Speed coefficient ≥ 0.  Used when ``type="one_euro"``.
+        beta: Speed coefficient >= 0.  Used when ``type="one_euro"``.
         d_cutoff: Derivative cutoff frequency in Hz.  Used when
             ``type="one_euro"``.
     """

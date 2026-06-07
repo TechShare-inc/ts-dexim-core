@@ -1,10 +1,10 @@
-"""SeqLock — sequence-lock primitive for lock-free shared-memory IPC.
+"""SeqLock -- sequence-lock primitive for lock-free shared-memory IPC.
 
 A SeqLock uses an integer counter embedded in the shared-memory buffer to
 coordinate a single writer and multiple readers without any OS mutex:
 
-- **Even** counter  → data is stable; safe to read.
-- **Odd** counter   → write in progress; reader spins or retries.
+- **Even** counter  -> data is stable; safe to read.
+- **Odd** counter   -> write in progress; reader spins or retries.
 
 Write protocol (caller must call begin/end or use the context manager):
     1. Increment ``seq_lock`` to an **odd** value (signals write in progress).
@@ -12,7 +12,7 @@ Write protocol (caller must call begin/end or use the context manager):
     3. Increment ``seq_lock`` to an **even** value (signals write complete).
 
 Read protocol:
-    1. Read ``seq1`` — retry if **odd** (write in progress).
+    1. Read ``seq1`` -- retry if **odd** (write in progress).
     2. Copy the data fields into local variables.
     3. Read ``seq2``.
     4. If ``seq1 != seq2`` a write occurred during the read; discard and retry.
@@ -25,7 +25,7 @@ Crash safety:
 
 Platform note:
     On x86/x64 (TSO memory model) aligned 32-bit reads and writes are
-    naturally atomic — no explicit memory-barrier instructions are needed for
+    naturally atomic -- no explicit memory-barrier instructions are needed for
     this SeqLock implementation in Python/ctypes.  On ARM targets, callers
     should verify that their platform provides equivalent guarantees.
 """

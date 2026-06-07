@@ -1,4 +1,4 @@
-"""DeviceNode — ManagedNode subclass with a formal device interface slot.
+"""DeviceNode -- ManagedNode subclass with a formal device interface slot.
 
 Imports ``DeviceInterface`` from ``dexim.core.robot_interface`` and re-exports
 it for backward compatibility.  Adds a concrete ``on_shutdown()`` that
@@ -10,7 +10,7 @@ Role subclasses
 PublisherDeviceNode
     Publish-only devices (sensors/cameras), e.g. RealSense, Manus glove.
 SubscriberDeviceNode
-    Pure-actuator devices (command sinks only) — reserved for future use.
+    Pure-actuator devices (command sinks only) -- reserved for future use.
 PubSubDeviceNode
     Bidirectional devices: read state *and* write commands, e.g. Inspire
     hand, Nova arm.
@@ -59,7 +59,7 @@ class DeviceNode(ManagedNode):
         ``super().on_standby()`` to ensure the interface is connected.
 
         Raises:
-            Nothing — all exceptions from ``connect()`` are swallowed and
+            Nothing -- all exceptions from ``connect()`` are swallowed and
             logged at DEBUG level.
         """
         try:
@@ -78,7 +78,7 @@ class DeviceNode(ManagedNode):
         ``ManagedNode.run()``.
 
         Raises:
-            Nothing — all exceptions from ``disconnect()`` are swallowed and
+            Nothing -- all exceptions from ``disconnect()`` are swallowed and
             logged at DEBUG level.
         """
         try:

@@ -637,7 +637,7 @@ class RobotControlNode(ManagedNode, ABC):
         Initializes the control loop (signal handlers, velocity limiting
         state) so the node is ready for a fast CTRL_START transition.
         """
-        logger.info(f"{self.node_id} entering STANDBY — control loop initializing")
+        logger.info(f"{self.node_id} entering STANDBY -- control loop initializing")
         self._initialize_control_loop()
 
     def on_start(self) -> None:

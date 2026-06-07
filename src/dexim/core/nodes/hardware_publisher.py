@@ -163,7 +163,7 @@ class HardwarePublisherNode(ManagedNode):
                 [topic_frame, payload_frame], flags=zmq.DONTWAIT
             )
         except zmq.Again:
-            # DONTWAIT drop — expected when no subscribers or HWM reached; non-fatal.
+            # DONTWAIT drop -- expected when no subscribers or HWM reached; non-fatal.
             logger.debug(f"Dropped frame on topic {topic!r}: no subscriber or HWM")
         except Exception as e:
             logger.debug(f"Failed to send message on topic {topic!r}: {e}")

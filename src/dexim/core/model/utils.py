@@ -91,7 +91,7 @@ def load_urdf_model(
         # Load model from temporary file
         model = pin.buildModelFromUrdf(temp_urdf_path, mimic=mimic)  # type: ignore
         if verbose:
-            print(f"✅ Model loaded from {urdf_path} (via temp file)")
+            print(f"[OK] Model loaded from {urdf_path} (via temp file)")
     finally:
         # Clean up temporary file
         os.unlink(temp_urdf_path)
@@ -177,7 +177,7 @@ def load_urdf_models(
             mimic=mimic,  # type: ignore
         )
         if verbose:
-            print(f"✅ Models loaded from {urdf_path} (via temp file)")
+            print(f"[OK] Models loaded from {urdf_path} (via temp file)")
     finally:
         # Clean up temporary file
         os.unlink(temp_urdf_path)

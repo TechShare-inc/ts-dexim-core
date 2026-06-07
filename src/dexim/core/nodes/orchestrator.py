@@ -10,10 +10,10 @@ control nodes in a distributed teleoperation system. It handles:
 
 Architecture:
     Orchestrator (Control Plane PUB + Status Plane PULL)
-         │
-         ├─> Node 1 (SUB control, PUSH status)
-         ├─> Node 2 (SUB control, PUSH status)
-         └─> Node N (SUB control, PUSH status)
+         |
+         +-> Node 1 (SUB control, PUSH status)
+         +-> Node 2 (SUB control, PUSH status)
+         +-> Node N (SUB control, PUSH status)
 
 Example:
     from dexim.core.nodes import TeleopOrchestrator
@@ -264,7 +264,7 @@ class TeleopOrchestrator:
             self._pub_control.send_multipart(
                 [TOPIC_CTRL, command.encode("utf-8")], flags=zmq.DONTWAIT
             )
-            logger.info(f"📢 Broadcast command: {command}")
+            logger.info(f"[BROADCAST] Broadcast command: {command}")
         except Exception as e:
             logger.error(f"Error sending command: {e}")
 
@@ -370,7 +370,7 @@ class TeleopOrchestrator:
                 status = self._node_statuses.get(node_id)
                 if status and status.status in {required_status, STATUS_HEALTHY}:
                     ready_nodes.add(node_id)
-                    logger.success(f"  ✓ Node '{node_id}' ready")
+                    logger.success(f"  [OK] Node '{node_id}' ready")
 
             # All nodes ready?
             if ready_nodes == self._expected_nodes:

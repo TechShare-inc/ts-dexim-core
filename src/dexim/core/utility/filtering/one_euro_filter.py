@@ -1,11 +1,11 @@
 """One Euro Filter for adaptive low-pass smoothing.
 
-Casiez, G., Roussel, N., & Vogel, D. (2012). 1€ filter: A simple speed-based
+Casiez, G., Roussel, N., & Vogel, D. (2012). 1 Euro filter: A simple speed-based
 low-pass filter for noisy input in interactive systems. CHI 2012.
 
 The filter adapts its cutoff frequency to signal speed:
-- Slow motion  → low cutoff  → heavy smoothing, minimal jitter.
-- Fast motion  → high cutoff → less lag, responsive tracking.
+- Slow motion  -> low cutoff  -> heavy smoothing, minimal jitter.
+- Fast motion  -> high cutoff -> less lag, responsive tracking.
 
 This makes it ideal for teleoperation: glove data is naturally noisy at rest
 but must track fast intentional movements with minimal delay.
@@ -126,7 +126,7 @@ class OneEuroFilter:
         Returns:
             Alpha in ``(0, 1]`` (same shape as *cutoff*).
         """
-        # τ = 1 / (2π f_c),  α = dt / (τ + dt)  =  1 / (1 + τ/dt)
+        # tau = 1 / (2*pi * f_c),  alpha = dt / (tau + dt)  =  1 / (1 + tau/dt)
         tau = 1.0 / (2.0 * np.pi * cutoff)
         dt = 1.0 / self._freq
         return 1.0 / (1.0 + tau / dt)

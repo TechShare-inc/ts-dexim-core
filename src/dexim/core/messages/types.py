@@ -11,10 +11,10 @@ Design principles:
   HandState satisfies SkeletonDataProtocol (structurally)
 
 Message vocabulary:
-    JointCommand  — controller → robot arm/hand (desired configuration)
-    JointState    — robot → system (observed joint configuration)
-    HandState     — input device → hand controller (observed hand skeleton)
-    RigidPose     — input device → arm controller (observed 6-DOF rigid body pose)
+    JointCommand  -- controller -> robot arm/hand (desired configuration)
+    JointState    -- robot -> system (observed joint configuration)
+    HandState     -- input device -> hand controller (observed hand skeleton)
+    RigidPose     -- input device -> arm controller (observed 6-DOF rigid body pose)
 """
 
 from __future__ import annotations

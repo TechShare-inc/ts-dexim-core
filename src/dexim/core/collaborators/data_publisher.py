@@ -1,4 +1,4 @@
-"""DataPlanePublisher — ZMQ PUB socket for action and observation messages."""
+"""DataPlanePublisher -- ZMQ PUB socket for action and observation messages."""
 
 from __future__ import annotations
 

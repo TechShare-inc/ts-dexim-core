@@ -224,19 +224,19 @@ class ManagedNode(abc.ABC):
         """Run before ``_main_loop_iteration()`` each tick.
 
         Responsibilities:
-        1. Tick the start countdown — transition to RUNNING when it expires.
+        1. Tick the start countdown -- transition to RUNNING when it expires.
         2. Call ``_auto_prepare()`` when in STANDBY (no countdown, no teleop).
         """
         if self._countdown_active:
             if self._tick_countdown():
-                # Countdown expired — activate teleoperation.
+                # Countdown expired -- activate teleoperation.
                 self._countdown_active = False
                 self._teleop_active = True
                 self.is_publishing = True
                 self.report_status(STATUS_STARTED)
-                print(f"{self.node_id} countdown complete — teleoperation active")
+                print(f"{self.node_id} countdown complete -- teleoperation active")
             else:
-                # Still counting down — report progress at second boundaries.
+                # Still counting down -- report progress at second boundaries.
                 remaining = self._countdown_end_ts - time.time()
                 second = int(remaining)
                 if second != self._last_reported_second:
@@ -256,14 +256,14 @@ class ManagedNode(abc.ABC):
                 self._teleop_active = True
                 self.is_publishing = True
                 self.report_status(STATUS_STARTED)
-                print(f"{self.node_id} auto-started — {auto_cmd}")
+                print(f"{self.node_id} auto-started -- {auto_cmd}")
 
     def _auto_prepare(self) -> str | None:
         """Override in subclasses to perform automatic preparation during STANDBY.
 
         Called each tick while the node is in STANDBY (no countdown active,
         teleop inactive).  Use this to check data availability, warm up
-        subsystems, or log readiness status — everything that should happen
+        subsystems, or log readiness status -- everything that should happen
         automatically without waiting for ``CTRL_START``.
 
         When the node is ready to run, return a control command string
@@ -359,14 +359,14 @@ class ManagedNode(abc.ABC):
             # poses are captured while the pipeline is still idle.
             self.on_start()
             if self._countdown_duration > 0.0:
-                # Start countdown — _pre_loop_iteration will transition
+                # Start countdown -- _pre_loop_iteration will transition
                 # to RUNNING when it expires.
                 self._start_countdown(self._countdown_duration)
                 self.report_status(
                     STATUS_STARTING, {"countdown_remaining": self._countdown_duration}
                 )
                 print(
-                    f"{self.node_id} start requested — countdown {self._countdown_duration:.0f}s"
+                    f"{self.node_id} start requested -- countdown {self._countdown_duration:.0f}s"
                 )
             else:
                 self._teleop_active = True
