@@ -215,5 +215,9 @@ class MotionController:
         # even if floating-point or timing issues caused the last interpolated
         # step to be imprecise.
         self.send(safe_position)
+        # Update the cached current position so that subsequent velocity-
+        # limited teleop commands start from the safe position rather than
+        # from the stale value captured during initialize().
+        self._current_joint_positions = safe_position.copy()
         logger.success(f"Reached safe position in {time.time() - start:.2f}s")
         return True
