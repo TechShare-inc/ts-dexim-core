@@ -1,5 +1,10 @@
 """TeleopOrchestrator - Central coordinator for multi-node teleoperation system.
 
+.. deprecated::
+    Use ``LaunchOrchestrator`` from ``dexim_nova_inspire.cli.launch`` instead.
+    This class is kept for backward compatibility and will be removed in
+    a future release.
+
 This module provides the TeleopOrchestrator class for managing multiple robot
 control nodes in a distributed teleoperation system. It handles:
 
@@ -48,6 +53,10 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
+import time
+import warnings
+from pathlib import Path
 import sys
 import time
 from pathlib import Path
@@ -103,6 +112,10 @@ class NodeStatus:
 class TeleopOrchestrator:
     """Central orchestrator for multi-node teleoperation system.
 
+    .. deprecated::
+        Use ``LaunchOrchestrator`` from
+        ``dexim_nova_inspire.cli.launch`` instead.
+
     This class manages the lifecycle of multiple robot control nodes,
     providing centralized command broadcasting and status monitoring.
     """
@@ -118,6 +131,12 @@ class TeleopOrchestrator:
             control_endpoint: Control plane endpoint to bind (default: tcp://*:5550)
             status_endpoint: Status plane endpoint to bind (default: tcp://*:5551)
         """
+        warnings.warn(
+            "TeleopOrchestrator is deprecated. "
+            "Use LaunchOrchestrator from dexim_nova_inspire.cli.launch instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.control_endpoint = control_endpoint
         self.status_endpoint = status_endpoint
 
