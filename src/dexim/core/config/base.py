@@ -261,7 +261,7 @@ class NovaConfig:
     """
 
     control_mode: str = "relative_pose"
-    handedness: str = "left"  # "left" or "right" - determines tracker name only
+    side: str = "left"  # "left" or "right" - determines tracker name only
     calibration_file: str | None = None  # Path to calibration JSON
     home_joints_deg: list[float] = field(
         default_factory=lambda: [0.0, -80.0, -10.0, 90.0, 90.0, 0.0]
@@ -271,9 +271,9 @@ class NovaConfig:
     def __post_init__(self):
         """Validate configuration."""
 
-        if self.handedness not in ["left", "right"]:
+        if self.side not in ["left", "right"]:
             raise ValueError(
-                f"Invalid handedness: {self.handedness}. Must be 'left' or 'right'"
+                f"Invalid side: {self.side}. Must be 'left' or 'right'"
             )
 
         if len(self.home_joints_deg) != 6:
@@ -355,13 +355,13 @@ class InspireConfig:
     )
 
     alpha: list[float] = field(default_factory=lambda: [1.0] * 5)
-    handedness: str = "left"
+    side: str = "left"
     active_dofs_override: int | None = None
 
     def __post_init__(self):
-        if self.handedness not in ["left", "right"]:
+        if self.side not in ["left", "right"]:
             raise ValueError(
-                f"Invalid handedness for InspireConfig: {self.handedness}. Must be 'left' or 'right'"
+                f"Invalid side for InspireConfig: {self.side}. Must be 'left' or 'right'"
             )
 
         if not isinstance(self.alpha, list) or len(self.alpha) != 5:
@@ -419,7 +419,7 @@ class DH5RealConfig:
 class DH5Config:
     """DH5 hand-specific configuration."""
 
-    handedness: str = "left"  # "left" or "right"
+    side: str = "left"  # "left" or "right"
     feature_extraction: dict[str, Any] = field(
         default_factory=lambda: {
             "src_indices": [1, 6, 11, 16, 21],  # Metacarpals
@@ -432,9 +432,9 @@ class DH5Config:
     )  # Scaling factors
 
     def __post_init__(self):
-        if self.handedness not in ["left", "right"]:
+        if self.side not in ["left", "right"]:
             raise ValueError(
-                f"Invalid handedness for DH5Config: {self.handedness}. Must be 'left' or 'right'"
+                f"Invalid side for DH5Config: {self.side}. Must be 'left' or 'right'"
             )
 
 

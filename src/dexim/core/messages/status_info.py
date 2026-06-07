@@ -93,7 +93,7 @@ class StatusInfo:
     robot_variant: str = ""
     """Human-readable variant name (e.g. ``"Nova 5"``, ``"Inspire"``)."""
 
-    handedness: str = ""
+    side: str = ""
     """``"left"``, ``"right"``, or empty if not applicable."""
 
     dof_count: int = 0
@@ -208,7 +208,7 @@ class StatusInfo:
             "data_age_sec",
             "no_data_streak",
             "robot_variant",
-            "handedness",
+            "side",
             "dof_count",
             "pipeline_stages",
             "rate_limiter_stats",

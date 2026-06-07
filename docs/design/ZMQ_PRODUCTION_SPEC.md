@@ -660,10 +660,10 @@ implement deduplication.
 ```python
 sensor_landscape = {
     "trackers": {
-        tracker_id: {"handedness", "last_seen_timestamp", "is_shown"}
+        tracker_id: {"side", "last_seen_timestamp", "is_shown"}
     },
     "skeletons": {
-        glove_id: {"handedness", "last_seen_timestamp", "is_shown"}
+        glove_id: {"side", "last_seen_timestamp", "is_shown"}
     }
 }
 ```
@@ -671,7 +671,7 @@ sensor_landscape = {
 Entries older than `landscape_timeout_seconds` (default 30 s) are purged on
 each `read()`.
 
-**`wait_for_sensor()`** blocks until a sensor matching `(sensor_type, handedness)`
+**`wait_for_sensor()`** blocks until a sensor matching `(sensor_type, side)`
 has been seen for at least `require_stable_frames=2` consecutive reads (default).
 Logs progress every 5 s. Used by hardware nodes that must wait for specific Manus
 gloves before entering the control loop.
@@ -679,7 +679,7 @@ gloves before entering the control loop.
 ```python
 subscriber.wait_for_sensor(
     sensor_type="tracker",
-    handedness="left",
+    side="left",
     timeout_sec=30.0,
     require_stable_frames=2,
 )

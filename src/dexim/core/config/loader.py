@@ -397,9 +397,9 @@ def validate_config(config: ControlNodeConfig | HandTrackingConfig) -> bool:
                 f"Nova home_joints_deg must have 6 elements, got {len(config.nova.home_joints_deg)}"
             )
     if config.robot_type == "inspire":
-        if config.inspire and config.inspire.handedness not in ["left", "right"]:
+        if config.inspire and config.inspire.side not in ["left", "right"]:
             raise ValueError(
-                f"InspireConfig.handedness must be 'left' or 'right', got {config.inspire.handedness}"
+                f"InspireConfig.side must be 'left' or 'right', got {config.inspire.side}"
             )
     if config.robot_type == "unitree_g1":
         if config.g1 and len(config.g1.home_joints_deg) != 14:

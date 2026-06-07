@@ -84,13 +84,13 @@ class HandState:
 
     Attributes:
         glove_id: Source device identifier (integer glove/hand ID).
-        handedness: 'left' or 'right'.
+        side: 'left' or 'right'.
         timestamp: Capture time in seconds (Unix epoch).
         joints: Ordered list of skeleton joints.
     """
 
     glove_id: int
-    handedness: str  # "left" | "right"
+    side: str  # "left" | "right"
     timestamp: float
     joints: list[SkeletonJoint] = field(default_factory=list)
 
@@ -103,7 +103,7 @@ class HandState:
         """
         return {
             "glove_id": self.glove_id,
-            "handedness": self.handedness,
+            "side": self.side,
             "timestamp": self.timestamp,
             "joints": [j.to_dict() for j in self.joints],
         }
@@ -121,7 +121,7 @@ class HandState:
         """
         return cls(
             glove_id=int(d["glove_id"]),
-            handedness=str(d["handedness"]),
+            side=str(d["side"]),
             timestamp=float(d["timestamp"]),
             joints=[SkeletonJoint.from_dict(j) for j in d.get("joints", [])],
         )
@@ -234,8 +234,8 @@ class RigidPose:
     # ------------------------------------------------------------------
 
     @property
-    def handedness(self) -> str | None:
-        """Infer handedness from tracker_type.
+    def side(self) -> str | None:
+        """Infer side from tracker_type.
 
         Returns:
             'left', 'right', or None if not a hand tracker.

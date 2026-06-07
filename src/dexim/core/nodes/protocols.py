@@ -99,7 +99,7 @@ class DataSubscriber(Protocol):
     def wait_for_sensor(
         self,
         sensor_type: str,
-        handedness: str,
+        side: str,
         glove_id: str | int | None = None,
         timeout_sec: float = 30.0,
         poll_interval_sec: float = 0.2,
@@ -109,7 +109,7 @@ class DataSubscriber(Protocol):
 
         Args:
             sensor_type: Type of sensor ("tracker" or "skeleton")
-            handedness: Handedness to match ("left" or "right")
+            side: Side to match ("left" or "right")
             glove_id: Glove ID for skeleton matching (required for skeletons)
             timeout_sec: Maximum time to wait in seconds
             poll_interval_sec: Interval between polls
@@ -130,14 +130,14 @@ class DataSubscriber(Protocol):
         """Wait for multiple sensors to appear in the landscape.
 
         Args:
-            sensors: List of (sensor_type, handedness) tuples,
+            sensors: List of (sensor_type, side) tuples,
                 e.g., [("tracker", "left"), ("tracker", "right")]
             timeout_sec: Maximum time to wait in seconds
             poll_interval_sec: Interval between polls
             require_stable_frames: Number of frames each sensor must be seen
 
         Returns:
-            Dict mapping "sensor_type_handedness" to whether it was found
+            Dict mapping "sensor_type_side" to whether it was found
 
         Example:
             >>> results = subscriber.wait_for_sensors(
@@ -460,8 +460,8 @@ class TrackerDataProtocol(Protocol):
     user_id: int
 
     @property
-    def handedness(self) -> str | None:
-        """Infer handedness from tracker_type.
+    def side(self) -> str | None:
+        """Infer side from tracker_type.
 
         Returns:
             'left' | 'right' | None
@@ -491,8 +491,8 @@ class SkeletonDataProtocol(Protocol):
     hierarchy_infos: dict[int, Any]
 
     @property
-    def handedness(self) -> str | None:
-        """Return handedness derived from hierarchy info.
+    def side(self) -> str | None:
+        """Return side derived from hierarchy info.
 
         Returns:
             'left' | 'right' | None
