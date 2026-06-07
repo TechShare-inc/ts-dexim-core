@@ -7,13 +7,14 @@ and detecting unsafe conditions.
 Author: Haoyan Li
 Date: October 24, 2025
 """
+
 from __future__ import annotations
 
 import time
-from typing import Dict, Optional
 
 import numpy as np
 from loguru import logger
+
 
 class SafetyMonitor:
     """Safety monitoring for robot teleoperation.
@@ -57,8 +58,8 @@ class SafetyMonitor:
     def __init__(
         self,
         timeout_sec: float,
-        joint_limits: Optional[np.ndarray] = None,
-        velocity_limits: Optional[np.ndarray] = None,
+        joint_limits: np.ndarray | None = None,
+        velocity_limits: np.ndarray | None = None,
     ):
         """Initialize safety monitor.
 
@@ -201,7 +202,7 @@ class SafetyMonitor:
     def validate_joint_command(
         self,
         q: np.ndarray,
-        q_prev: Optional[np.ndarray] = None,
+        q_prev: np.ndarray | None = None,
         dt: float = 0.033,
     ) -> bool:
         """Validate complete joint command.
@@ -236,7 +237,7 @@ class SafetyMonitor:
 
         return True
 
-    def get_violation_report(self) -> Dict:
+    def get_violation_report(self) -> dict:
         """Get safety violation statistics.
 
         Returns:

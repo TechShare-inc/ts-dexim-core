@@ -3,43 +3,45 @@
 This module provides functions for loading, merging, validating, and saving
 configuration files.
 """
+
 from __future__ import annotations
 
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any
 
 import yaml
 from loguru import logger
 
 from .base import (
     BaseOffsetConfig,
+    CameraConfig,
     ControlConfig,
     ControlNodeConfig,
     DH5Config,
     DH5RealConfig,
-    InterfaceConfig,
-    NovaConfig,
-    NovaRealConfig,
-    SubscriberConfig,
-    InspireConfig,
-    InspireRealConfig,
-    SimInterfaceConfig,
-    RealInterfaceConfig,
-    TCPIPProtocolConfig,
-    RS485ProtocolConfig,
+    EndpointsConfig,
     G1Config,
     G1RealConfig,
-    CameraConfig,
-    MediaPipeConfig,
-    EndpointsConfig,
-    PublishConfig,
     HandTrackingConfig,
+    InspireConfig,
+    InspireRealConfig,
+    InterfaceConfig,
+    MediaPipeConfig,
+    NovaConfig,
+    NovaRealConfig,
+    PublishConfig,
+    RealInterfaceConfig,
+    RS485ProtocolConfig,
+    SimInterfaceConfig,
+    SubscriberConfig,
+    TCPIPProtocolConfig,
 )
+
 
 def load_config(
     yaml_path: str,
-) -> Union[ControlNodeConfig, HandTrackingConfig]:
+) -> ControlNodeConfig | HandTrackingConfig:
     """Load configuration from YAML file.
 
     Supports both ControlNodeConfig and HandTrackingConfig based on node_type.
@@ -62,7 +64,7 @@ def load_config(
 
     logger.info(f"Loading configuration from {yaml_path}")
 
-    with open(config_path, "r") as f:
+    with open(config_path) as f:
         config_dict = yaml.safe_load(f)
 
     if not config_dict:
@@ -84,8 +86,9 @@ def load_config(
         )
         return config
 
+
 def _parse_interface(
-    interface_dict: Dict[str, Any], robot_type: str
+    interface_dict: dict[str, Any], robot_type: str
 ) -> InterfaceConfig:
     """Parse the interface section into an InterfaceConfig.
 
@@ -212,7 +215,8 @@ def _parse_interface(
 
     raise ValueError("interface.mode must be 'sim' or 'real'")
 
-def _dict_to_control_config(config_dict: Dict[str, Any]) -> ControlNodeConfig:
+
+def _dict_to_control_config(config_dict: dict[str, Any]) -> ControlNodeConfig:
     """Convert dictionary to ControlNodeConfig.
 
     Args:
@@ -270,7 +274,8 @@ def _dict_to_control_config(config_dict: Dict[str, Any]) -> ControlNodeConfig:
         g1=g1_config,
     )
 
-def _dict_to_hand_tracking_config(config_dict: Dict[str, Any]) -> HandTrackingConfig:
+
+def _dict_to_hand_tracking_config(config_dict: dict[str, Any]) -> HandTrackingConfig:
     """Convert dictionary to HandTrackingConfig.
 
     Args:
@@ -305,8 +310,9 @@ def _dict_to_hand_tracking_config(config_dict: Dict[str, Any]) -> HandTrackingCo
         heartbeat_interval=heartbeat_interval,
     )
 
+
 def merge_config(
-    base_config: ControlNodeConfig, overrides: Dict[str, Any]
+    base_config: ControlNodeConfig, overrides: dict[str, Any]
 ) -> ControlNodeConfig:
     """Merge CLI overrides into base configuration.
 
@@ -330,6 +336,7 @@ def merge_config(
 
     return base_config
 
+
 def _set_nested_attr(obj: Any, key: str, value: Any):
     """Set nested attribute using dot notation.
 
@@ -346,7 +353,8 @@ def _set_nested_attr(obj: Any, key: str, value: Any):
 
     setattr(obj, parts[-1], value)
 
-def validate_config(config: Union[ControlNodeConfig, HandTrackingConfig]) -> bool:
+
+def validate_config(config: ControlNodeConfig | HandTrackingConfig) -> bool:
     """Validate configuration for common issues.
 
     Args:
@@ -402,6 +410,7 @@ def validate_config(config: Union[ControlNodeConfig, HandTrackingConfig]) -> boo
     logger.success("Configuration validation passed")
     return True
 
+
 def save_config(config: ControlNodeConfig, yaml_path: str):
     """Save configuration to YAML file.
 
@@ -420,7 +429,8 @@ def save_config(config: ControlNodeConfig, yaml_path: str):
 
     logger.success(f"Configuration saved to {yaml_path}")
 
-def config_to_dict(config: ControlNodeConfig) -> Dict[str, Any]:
+
+def config_to_dict(config: ControlNodeConfig) -> dict[str, Any]:
     """Convert ControlNodeConfig to dictionary.
 
     Args:
@@ -431,6 +441,7 @@ def config_to_dict(config: ControlNodeConfig) -> Dict[str, Any]:
     """
 
     return asdict(config)
+
 
 # Alias for backward compatibility
 _dict_to_config = _dict_to_control_config

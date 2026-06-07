@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 import msgpack
+from dexim.core.messages.status_info import StatusInfo
 from dexim.core.messages.types import (
     FrameObservation,
     HandState,
@@ -152,15 +153,31 @@ def pack_status_message(
     status: str,
     is_recording: bool,
     timestamp: float,
-    info: dict[str, Any] | None = None,
+    info: dict[str, Any] | StatusInfo | None = None,
 ) -> bytes:
-    """Pack node status payload for PUSH/PULL status plane."""
+    """Pack node status payload for PUSH/PULL status plane.
+
+    Args:
+        node_id: Unique node identifier.
+        status: One of the ``STATUS_*`` constants.
+        is_recording: Whether the node is recording.
+        timestamp: Unix timestamp of the status event.
+        info: Extra fields as a ``dict`` or ``StatusInfo`` instance.
+            ``StatusInfo`` is serialized via ``to_flat_dict()``.
+
+    Returns:
+        JSON-encoded bytes ready for ZMQ PUSH.
+    """
+    if isinstance(info, StatusInfo):
+        info_dict: dict[str, Any] = info.to_flat_dict()
+    else:
+        info_dict = info or {}
     payload = {
         "node_id": node_id,
         "status": status,
         "is_recording": bool(is_recording),
         "timestamp": float(timestamp),
-        "info": info or {},
+        "info": info_dict,
     }
     return json.dumps(payload, separators=(",", ":")).encode("utf-8")
 
@@ -202,6 +219,8 @@ __all__ = [
     "pack_data_message",
     "unpack_data_message",
     "pack_status_message",
+    # Status info
+    "StatusInfo",
     # Message types
     "FrameObservation",
     "HandState",

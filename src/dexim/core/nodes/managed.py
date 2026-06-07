@@ -41,6 +41,7 @@ from dexim.core.messages import (
     STATUS_STARTED,
     STATUS_STARTING,
     TOPIC_CTRL,
+    StatusInfo,
     pack_status_message,
 )
 
@@ -361,8 +362,12 @@ class ManagedNode(abc.ABC):
                 # Start countdown — _pre_loop_iteration will transition
                 # to RUNNING when it expires.
                 self._start_countdown(self._countdown_duration)
-                self.report_status(STATUS_STARTING, {"countdown_remaining": self._countdown_duration})
-                print(f"{self.node_id} start requested — countdown {self._countdown_duration:.0f}s")
+                self.report_status(
+                    STATUS_STARTING, {"countdown_remaining": self._countdown_duration}
+                )
+                print(
+                    f"{self.node_id} start requested — countdown {self._countdown_duration:.0f}s"
+                )
             else:
                 self._teleop_active = True
                 self.is_publishing = True
@@ -463,19 +468,71 @@ class ManagedNode(abc.ABC):
     # ----------------------
     # Status/heartbeat
     # ----------------------
-    def report_status(self, status: str, info: dict[str, Any] | None = None) -> None:
+
+    def get_status_info(self) -> StatusInfo:
+        """Return a snapshot of the node's runtime state.
+
+        Subclasses override this to add type-specific fields
+        (robot variant, pipeline stats, hardware connection, etc.).
+        The base implementation covers fields managed by
+        ``ManagedNode`` itself.
+
+        Returns:
+            A ``StatusInfo`` with base fields populated.
+        """
+        countdown_remaining: float | None = None
+        if self._countdown_active:
+            remaining = self._countdown_end_ts - time.time()
+            countdown_remaining = max(0.0, remaining)
+
+        return StatusInfo(
+            is_publishing=self.is_publishing,
+            teleop_active=self._teleop_active,
+            countdown_active=self._countdown_active,
+            countdown_remaining=countdown_remaining,
+        )
+
+    def report_status(
+        self,
+        status: str,
+        info: dict[str, Any] | StatusInfo | None = None,
+    ) -> None:
+        """Publish a status update on the ZMQ status plane.
+
+        Args:
+            status: One of the ``STATUS_*`` constants.
+            info: Extra fields as a ``dict`` or ``StatusInfo``.
+                When ``None``, ``get_status_info()`` is called
+                automatically.
+        """
         if self._push_status is None:
             return
+
+        resolved_info: dict[str, Any] | StatusInfo
+        if info is not None:
+            # Caller-supplied info (e.g. countdown, error context)
+            # takes precedence but still includes is_publishing.
+            if isinstance(info, StatusInfo):
+                resolved_info = info
+            else:
+                resolved_info = {
+                    "is_publishing": self.is_publishing,
+                    **info,
+                }
+        else:
+            # No explicit info -- build from get_status_info().
+            resolved_info = self.get_status_info()
+
         payload = pack_status_message(
             node_id=self.node_id,
             status=status,
             is_recording=self.is_recording,
             timestamp=time.time(),
-            info={"is_publishing": self.is_publishing, **(info or {})},
+            info=resolved_info,
         )
-        # Status plane is PUSH → PULL; single frame payload.
+        # Status plane is PUSH -> PULL; single frame payload.
         # DONTWAIT + low SNDHWM means this drops silently when no
-        # orchestrator is consuming status messages — non-fatal.
+        # orchestrator is consuming status messages -- non-fatal.
         try:
             self._push_status.send(payload, flags=zmq.DONTWAIT)
         except zmq.Again:
@@ -488,5 +545,5 @@ class ManagedNode(abc.ABC):
             return  # Status reported by _pre_loop_iteration during countdown
         now = time.time()
         if now - self._last_heartbeat_ts >= self.heartbeat_interval:
-            self.report_status(STATUS_HEALTHY)
+            self.report_status(STATUS_HEALTHY, info=self.get_status_info())
             self._last_heartbeat_ts = now

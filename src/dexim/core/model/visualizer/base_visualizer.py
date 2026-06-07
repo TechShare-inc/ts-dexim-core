@@ -5,6 +5,7 @@ This module provides a common base class for robot visualizers,
 containing shared functionality for visibility control, server management,
 and common visualization patterns.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -28,6 +29,7 @@ except ImportError as _err:
         "viser is required by dexim.core.model.visualizer but is not installed. "
         "Install it via pip: pip install dexim-core[viz]"
     ) from _err
+
 
 class BaseRobotVisualizer(ABC):
     """
@@ -300,5 +302,6 @@ class BaseRobotVisualizer(ABC):
         """String representation of the visualizer."""
 
         pass
+
 
 __all__ = ["BaseRobotVisualizer"]

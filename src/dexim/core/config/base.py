@@ -59,7 +59,9 @@ class ControlConfig:
     timeout_sec: float = 1.0
     safe_position_on_timeout: bool = True
     move_to_home_at_start: bool = False
-    start_countdown_sec: float = 0.0  # Seconds before _teleop_active after CTRL_START; 0 = instant
+    start_countdown_sec: float = (
+        0.0  # Seconds before _teleop_active after CTRL_START; 0 = instant
+    )
 
     # Velocity limiting
     enable_velocity_limiting: bool = True

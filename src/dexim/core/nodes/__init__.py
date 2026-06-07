@@ -41,7 +41,6 @@ from __future__ import annotations
 # Base node classes
 from dexim.core.nodes.command_node import CommandNode
 from dexim.core.nodes.device_node import (
-    DeviceInterface,
     DeviceNode,
     PublisherDeviceNode,
     PubSubDeviceNode,

@@ -7,13 +7,14 @@ rates with drift correction and statistics tracking.
 Author: Haoyan Li
 Date: October 24, 2025
 """
+
 from __future__ import annotations
 
 import time
 from collections import deque
-from typing import Dict
 
 from loguru import logger
+
 
 class RateLimiter:
     """Precise rate limiter for control loops.
@@ -76,10 +77,10 @@ class RateLimiter:
         self.jitter_samples = deque(maxlen=100)
 
         logger.debug(
-            f"RateLimiter initialized: {rate_hz}Hz ({self.target_period*1000:.2f}ms period)"
+            f"RateLimiter initialized: {rate_hz}Hz ({self.target_period * 1000:.2f}ms period)"
         )
 
-    def sleep(self) -> Dict[str, float]:
+    def sleep(self) -> dict[str, float]:
         """Sleep to maintain target rate.
 
         This method:
@@ -155,7 +156,7 @@ class RateLimiter:
 
         logger.debug("RateLimiter reset")
 
-    def get_statistics(self) -> Dict[str, float]:
+    def get_statistics(self) -> dict[str, float]:
         """Get timing statistics.
 
         Returns:

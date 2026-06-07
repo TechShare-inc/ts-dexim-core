@@ -6,8 +6,8 @@ This module provides optimization tools for inverse kinematics:
 - OptimizerConfig: Configuration dataclass for VectorOptimizer parameters
 - NloptReturn: Enum for nlopt optimization return codes
 """
-from __future__ import annotations
 
+from __future__ import annotations
 
 from dexim.core.model.optimizer.optimizer import (
     NloptReturn,

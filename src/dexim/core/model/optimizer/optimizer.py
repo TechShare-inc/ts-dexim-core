@@ -181,7 +181,7 @@ class VectorOptimizer:
 
         iter = 0
         for iter in range(self.MAX_ITER):
-            self.logger.debug(f"Optimization iteration {iter+1}/{self.MAX_ITER}")
+            self.logger.debug(f"Optimization iteration {iter + 1}/{self.MAX_ITER}")
 
             # Check global elapsed time before starting this iteration
             elapsed = time.time() - current_time
@@ -209,7 +209,7 @@ class VectorOptimizer:
             self.logger.debug(f"Manifold eval value: {eval_value}")
             if eval_value <= self.xtol_rel:
                 self.logger.debug(
-                    f"Optimizer converged at iteration {iter+1}/{self.MAX_ITER} "
+                    f"Optimizer converged at iteration {iter + 1}/{self.MAX_ITER} "
                     f"for the manifold."
                 )
                 reason = NloptReturn.FTOL_REACHED

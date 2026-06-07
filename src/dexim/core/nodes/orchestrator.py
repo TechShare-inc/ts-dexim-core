@@ -53,7 +53,6 @@ import time
 from pathlib import Path
 
 import zmq
-from loguru import logger
 from dexim.core.messages import (
     CTRL_PAUSE,
     CTRL_PUB_ENDPOINT,
@@ -66,6 +65,7 @@ from dexim.core.messages import (
     STATUS_PULL_ENDPOINT,
     TOPIC_CTRL,
 )
+from loguru import logger
 
 
 class NodeStatus:
@@ -306,7 +306,7 @@ class TeleopOrchestrator:
 
                 count += 1
                 logger.debug(
-                    f"Status from '{node_id}': {status} " f"(recording={is_recording})"
+                    f"Status from '{node_id}': {status} (recording={is_recording})"
                 )
 
             except zmq.Again:

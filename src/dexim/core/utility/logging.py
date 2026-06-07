@@ -1,9 +1,12 @@
 """Logging configuration using loguru."""
+
 from __future__ import annotations
 
-from loguru import logger
 import sys
 from pathlib import Path
+
+from loguru import logger
+
 
 def setup_logger(log_dir: str = "logs", log_level: str = "INFO"):
     """Configure loguru logger with file rotation and formatting.

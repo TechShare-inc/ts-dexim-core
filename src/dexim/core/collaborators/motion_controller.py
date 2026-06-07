@@ -170,9 +170,7 @@ class MotionController:
         """
         # Guard: if the interface is already disconnected we cannot move.
         if not self._interface.is_connected():
-            logger.warning(
-                "Cannot move to safe position: interface is not connected"
-            )
+            logger.warning("Cannot move to safe position: interface is not connected")
             return False
 
         try:

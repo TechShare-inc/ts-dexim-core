@@ -264,8 +264,7 @@ def parse_endpoint(endpoint: str) -> tuple[str, int]:
     match = _ENDPOINT_PATTERN.match(endpoint)
     if not match:
         raise ValueError(
-            f"Invalid endpoint format: '{endpoint}'. "
-            f"Expected format: 'tcp://host:port'"
+            f"Invalid endpoint format: '{endpoint}'. Expected format: 'tcp://host:port'"
         )
     host = match.group(1)
     port = int(match.group(2))

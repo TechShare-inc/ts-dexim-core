@@ -26,7 +26,6 @@ from .base import (
     # DH5 configs
     DH5RealConfig,
     EndpointsConfig,
-    FilterConfig,
     G1Config,
     # G1 configs
     G1RealConfig,

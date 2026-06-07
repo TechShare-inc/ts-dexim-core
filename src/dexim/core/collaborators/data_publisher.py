@@ -33,7 +33,9 @@ class DataPlanePublisher:
         ctx = zmq.Context.instance()
         pub: zmq.Socket = ctx.socket(zmq.PUB)
         pub.setsockopt(zmq.LINGER, 0)
-        pub.setsockopt(zmq.SNDHWM, 100)  # Drop when no subscriber; prevent unbounded buffering
+        pub.setsockopt(
+            zmq.SNDHWM, 100
+        )  # Drop when no subscriber; prevent unbounded buffering
         if bind:
             pub.bind(data_endpoint)
         else:

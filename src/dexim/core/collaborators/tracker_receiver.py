@@ -113,9 +113,7 @@ class TrackerReceiver:
                 self._no_data_streak += 1
                 return None
             self._last_data_age_sec = age
-            logger.debug(
-                f"[{self._tracker_type}] data_age={age * 1000:.1f}ms"
-            )
+            logger.debug(f"[{self._tracker_type}] data_age={age * 1000:.1f}ms")
         else:
             self._last_data_age_sec = None
 
