@@ -211,5 +211,9 @@ class MotionController:
             if i < num_steps - 1:
                 self.rate_limiter.sleep()
 
+        # Explicit final send to guarantee the exact safe position is reached,
+        # even if floating-point or timing issues caused the last interpolated
+        # step to be imprecise.
+        self.send(safe_position)
         logger.success(f"Reached safe position in {time.time() - start:.2f}s")
         return True
