@@ -10,6 +10,7 @@ composed freely by any robot package (arm or hand):
         JointFilter,
         SkeletonReceiver,
         TrackerReceiver,
+        ErgonomicsReceiver,
     )
 
 Protocols
@@ -33,6 +34,7 @@ from dexim.core.collaborators.protocols import (
     WaitableSubscriberProtocol,
 )
 from dexim.core.collaborators.skeleton_receiver import SkeletonReceiver
+from dexim.core.collaborators.ergonomics_receiver import ErgonomicsReceiver
 from dexim.core.collaborators.tracker_receiver import TrackerReceiver
 
 __all__ = [
@@ -42,6 +44,7 @@ __all__ = [
     "PipelineProfiler",
     "JointFilter",
     "SkeletonReceiver",
+    "ErgonomicsReceiver",
     "TrackerReceiver",
     # Protocols
     "ReceiverProtocol",

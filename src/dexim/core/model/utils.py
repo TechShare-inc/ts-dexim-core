@@ -49,7 +49,7 @@ def load_urdf_model(
         ValueError: If package directories do not exist or URDF loading fails
 
     Example:
-        >>> model = load_urdf_model("assets", "inspire_hand_l", "inspire_hand_l.urdf")
+        >>> model = load_urdf_model("assets", "tesollo_hand_l", "tesollo_hand_l.urdf")
     """
 
     # Convert to Path for consistent handling
@@ -127,8 +127,8 @@ def load_urdf_models(
     Example:
         >>> model, collision, visual = load_urdf_models(
         ...     "assets",
-        ...     "inspire_hand_l",
-        ...     "inspire_hand_l.urdf",
+        ...     "tesollo_hand_l",
+        ...     "tesollo_hand_l.urdf",
         ...     mimic=True
         ... )
     """

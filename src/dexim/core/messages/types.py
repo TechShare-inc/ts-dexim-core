@@ -72,6 +72,40 @@ class SkeletonJoint:
             rotation=(float(rot[0]), float(rot[1]), float(rot[2]), float(rot[3])),
             scale=(float(sc[0]), float(sc[1]), float(sc[2])),
         )
+    
+@dataclass
+class ErgonomicsJoint:
+    """A single joint in a ergonomics data.
+    
+    Attributes:
+        glove_id: Joint index as defined in a source device.
+        handedness:
+        timestamp: float
+        values:
+    """
+
+    glove_id: int
+    handedness: str
+    timestamp: float
+    values: list[float]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "glove_id": self.glove_id,
+            "handedness": self.handedness,
+            "timestamp": self.timestamp,
+            "values": self.values,
+        }
+    
+    @classmethod
+    def from_dict(cls, d:dict[str, Any]) -> "ErgonomicsJoint":
+        return cls(
+            glove_id=int(d["glove_id"]),
+            handedness=str(d.get("handedness", "")),
+            timestamp=float(d["timestamp"]),
+            values=[float(v) for v in d["values"]],
+        )
+
 
 
 @dataclass
@@ -337,4 +371,5 @@ __all__ = [
     "HandState",
     "RigidPose",
     "SkeletonJoint",
+    "ErgonomicsJoint",
 ]

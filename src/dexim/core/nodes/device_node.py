@@ -13,7 +13,7 @@ SubscriberDeviceNode
     Pure-actuator devices (command sinks only) — reserved for future use.
 PubSubDeviceNode
     Bidirectional devices: read state *and* write commands, e.g. Inspire
-    hand, Nova arm.
+    hand, Tesollo hand, Nova arm.
 """
 
 from __future__ import annotations
@@ -94,7 +94,7 @@ class PubSubDeviceNode(DeviceNode):
     delegates to ``_run_pipeline()`` so subclasses only need to override one
     method.
 
-    Examples: Inspire hand control node, Nova arm control node.
+    Examples: Inspire hand control node, Tesollo hand control node, Nova arm control node.
     """
 
     @abstractmethod

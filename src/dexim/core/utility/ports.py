@@ -69,8 +69,8 @@ NODE_DATA_PORTS: dict[str, int] = {
     "dh5_left": 5563,
     "dh5_right": 5564,
     "g1": 5565,
-    "gripper_left": 5566,
-    "gripper_right": 5567,
+    "tesollo_left": 5566,
+    "tesollo_right": 5567,
 }
 
 # =============================================================================

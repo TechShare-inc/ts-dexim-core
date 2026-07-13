@@ -13,6 +13,7 @@ from dexim.core.messages.types import (
     HandState,
     RigidPose,
     SkeletonJoint,
+    ErgonomicsJoint,
 )
 
 # Control/status endpoints
@@ -54,6 +55,9 @@ class TopicBuilder:
     class _ObservationTopics:
         def joint_state(self, device_id: str) -> bytes:
             return f"observation/{device_id}/joint_state".encode()
+        
+        def ergonomics_state(self, device_id: str) -> bytes:
+            return f"observation/{device_id}/ergonomics_state".encode()
 
         def hand_state(self, device_id: str) -> bytes:
             return f"observation/{device_id}/hand_state".encode()
@@ -83,6 +87,9 @@ TOPIC_MANUS_RAW_SKELETONS = b"observation/manus/manus_raw_skeletons"
 
 #: Deprecated – use ``TopicBuilder().observation.rigid_pose(node_id)``
 TOPIC_MANUS_TRACKERS = b"observation/manus/manus_trackers"
+
+#
+TOPIC_MANUS_ERGONOMICS = b"observation/manus/manus_ergonomics"
 
 
 class TopicValidator:
@@ -190,6 +197,7 @@ __all__ = [
     # Backward-compat topic constants (deprecated)
     "TOPIC_MANUS_RAW_SKELETONS",
     "TOPIC_MANUS_TRACKERS",
+    "TOPIC_MANUS_ERGONOMICS",
     # Serialization helpers
     "pack_data_message",
     "unpack_data_message",
@@ -199,4 +207,5 @@ __all__ = [
     "HandState",
     "RigidPose",
     "SkeletonJoint",
+    "ErgonomicsJoint",
 ]
