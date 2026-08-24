@@ -205,5 +205,48 @@ class MotionController:
             if i < num_steps - 1:
                 self.rate_limiter.sleep()
 
-        logger.success(f"Reached safe position in {time.time() - start:.2f}s")
-        return True
+        # Explicit final send to guarantee the exact safe position is reached,
+        # even if floating-point or timing issues caused the last interpolated
+        # step to be imprecise.
+        self.send(safe_position)
+
+        # Wait until feedback confirms that the robot reached the target.
+        verify_start = time.time()
+        settled_count = 0
+        max_error = float("inf")
+        position_tolerance_rad = 0.02
+        settle_timeout_sec = 5.0
+
+        while time.time() - verify_start < settle_timeout_sec:
+            try:
+                actual_q = self._interface.read().q
+            except Exception as exc:
+                logger.warning(f"Failed to verify safe position: {exc}")
+                self.rate_limiter.sleep()
+                continue
+
+            max_error = float(np.max(np.abs(safe_position - actual_q)))
+
+            if max_error <= position_tolerance_rad:
+                settled_count += 1
+
+                if settled_count >= 3:
+                    self._current_joint_positions = actual_q.copy()
+                    logger.success(
+                        f"Reached safe position in {time.time() - start:.2f}s "
+                        f"(max error={max_error:.4f} rad)"
+                    )
+                    return True
+
+            else:
+                settled_count = 0
+
+            self.send(safe_position)
+            self.rate_limiter.sleep()
+
+        logger.error(
+            f"Safe-position verification timed out "
+            f"(last max error={max_error:.4f} rad)"
+        )
+
+        return False
