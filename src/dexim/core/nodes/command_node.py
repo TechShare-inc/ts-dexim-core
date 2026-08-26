@@ -78,6 +78,7 @@ class CommandNode(ManagedNode):
 
         pub = self._ctx.socket(zmq.PUB)
         pub.setsockopt(zmq.LINGER, 0)
+        pub.setsockopt(zmq.SNDHWM, 100)
 
         if self._bind:
             pub.bind(self._data_endpoint)
@@ -123,6 +124,8 @@ class CommandNode(ManagedNode):
             )
             self._pub.send_multipart([topic_frame, payload_frame], flags=zmq.DONTWAIT)
             logger.debug(f"Published command: {command[:50]}...")
+        except zmq.Again:
+            pass  # Non-fatal: no subscriber or HWM reached
         except zmq.ZMQError as e:
             logger.error(f"Failed to publish command: {e}")
         except Exception as e:
@@ -131,6 +134,10 @@ class CommandNode(ManagedNode):
     # ----------------------
     # ManagedNode lifecycle hooks
     # ----------------------
+    def on_standby(self) -> None:
+        """Called when entering STANDBY state."""
+        logger.info(f"{self.node_id} entering standby")
+
     def on_start(self) -> None:
         """Called when START command is received."""
         logger.info(f"{self.node_id} started")

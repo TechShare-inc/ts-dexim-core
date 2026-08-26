@@ -1,4 +1,4 @@
-"""PipelineProfiler — per-stage timing accumulation and periodic reporting."""
+"""PipelineProfiler -- per-stage timing accumulation and periodic reporting."""
 
 from __future__ import annotations
 
@@ -49,7 +49,7 @@ class PipelineProfiler:
         line with all stage timings for this iteration.
 
         Args:
-            stages: Mapping of stage name → (t_start, t_end) from
+            stages: Mapping of stage name -> (t_start, t_end) from
                 ``time.perf_counter()``.
         """
         parts: list[str] = []

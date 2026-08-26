@@ -1,5 +1,10 @@
 """TeleopOrchestrator - Central coordinator for multi-node teleoperation system.
 
+.. deprecated::
+    Use ``LaunchOrchestrator`` from ``dexim_nova_inspire.cli.launch`` instead.
+    This class is kept for backward compatibility and will be removed in
+    a future release.
+
 This module provides the TeleopOrchestrator class for managing multiple robot
 control nodes in a distributed teleoperation system. It handles:
 
@@ -10,10 +15,10 @@ control nodes in a distributed teleoperation system. It handles:
 
 Architecture:
     Orchestrator (Control Plane PUB + Status Plane PULL)
-         │
-         ├─> Node 1 (SUB control, PUSH status)
-         ├─> Node 2 (SUB control, PUSH status)
-         └─> Node N (SUB control, PUSH status)
+         |
+         +-> Node 1 (SUB control, PUSH status)
+         +-> Node 2 (SUB control, PUSH status)
+         +-> Node N (SUB control, PUSH status)
 
 Example:
     from dexim.core.nodes import TeleopOrchestrator
@@ -50,10 +55,13 @@ import json
 import subprocess
 import sys
 import time
+import warnings
+from pathlib import Path
+import sys
+import time
 from pathlib import Path
 
 import zmq
-from loguru import logger
 from dexim.core.messages import (
     CTRL_PAUSE,
     CTRL_PUB_ENDPOINT,
@@ -66,6 +74,7 @@ from dexim.core.messages import (
     STATUS_PULL_ENDPOINT,
     TOPIC_CTRL,
 )
+from loguru import logger
 
 
 class NodeStatus:
@@ -103,6 +112,10 @@ class NodeStatus:
 class TeleopOrchestrator:
     """Central orchestrator for multi-node teleoperation system.
 
+    .. deprecated::
+        Use ``LaunchOrchestrator`` from
+        ``dexim_nova_inspire.cli.launch`` instead.
+
     This class manages the lifecycle of multiple robot control nodes,
     providing centralized command broadcasting and status monitoring.
     """
@@ -118,6 +131,12 @@ class TeleopOrchestrator:
             control_endpoint: Control plane endpoint to bind (default: tcp://*:5550)
             status_endpoint: Status plane endpoint to bind (default: tcp://*:5551)
         """
+        warnings.warn(
+            "TeleopOrchestrator is deprecated. "
+            "Use LaunchOrchestrator from dexim_nova_inspire.cli.launch instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.control_endpoint = control_endpoint
         self.status_endpoint = status_endpoint
 
@@ -145,6 +164,7 @@ class TeleopOrchestrator:
 
         # Control Plane: PUB socket (bind)
         self._pub_control = self._ctx.socket(zmq.PUB)  # type: ignore
+        self._pub_control.setsockopt(zmq.SNDHWM, 100)
         # Replace localhost with 0.0.0.0 for binding
         bind_addr = self.control_endpoint.replace("localhost", "0.0.0.0")
         if bind_addr.startswith("tcp://*"):
@@ -263,7 +283,7 @@ class TeleopOrchestrator:
             self._pub_control.send_multipart(
                 [TOPIC_CTRL, command.encode("utf-8")], flags=zmq.DONTWAIT
             )
-            logger.info(f"📢 Broadcast command: {command}")
+            logger.info(f"[BROADCAST] Broadcast command: {command}")
         except Exception as e:
             logger.error(f"Error sending command: {e}")
 
@@ -305,7 +325,7 @@ class TeleopOrchestrator:
 
                 count += 1
                 logger.debug(
-                    f"Status from '{node_id}': {status} " f"(recording={is_recording})"
+                    f"Status from '{node_id}': {status} (recording={is_recording})"
                 )
 
             except zmq.Again:
@@ -369,7 +389,7 @@ class TeleopOrchestrator:
                 status = self._node_statuses.get(node_id)
                 if status and status.status in {required_status, STATUS_HEALTHY}:
                     ready_nodes.add(node_id)
-                    logger.success(f"  ✓ Node '{node_id}' ready")
+                    logger.success(f"  [OK] Node '{node_id}' ready")
 
             # All nodes ready?
             if ready_nodes == self._expected_nodes:

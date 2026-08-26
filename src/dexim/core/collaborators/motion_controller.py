@@ -1,4 +1,4 @@
-"""MotionController — rate limiting, velocity limiting, timeout, and safe position."""
+"""MotionController -- rate limiting, velocity limiting, timeout, and safe position."""
 
 from __future__ import annotations
 
@@ -143,7 +143,7 @@ class MotionController:
         """Sleep to maintain target rate.
 
         Returns:
-            Timing dict from RateLimiter (keys: elapsed, overtime, jitter, …).
+            Timing dict from RateLimiter (keys: elapsed, overtime, jitter, ...).
         """
         return self.rate_limiter.sleep()
 
@@ -165,8 +165,14 @@ class MotionController:
             timeout_sec: Maximum movement duration.
 
         Returns:
-            True if target reached, False on timeout.
+            True if target reached, False on timeout or when interface is
+            unavailable.
         """
+        # Guard: if the interface is already disconnected we cannot move.
+        if not self._interface.is_connected():
+            logger.warning("Cannot move to safe position: interface is not connected")
+            return False
+
         try:
             current = self._interface.read().q
         except Exception as exc:

@@ -35,7 +35,7 @@ from __future__ import annotations
 import signal
 import time
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 import numpy as np
 from dexim.core.nodes.managed import ManagedNode
@@ -155,7 +155,7 @@ class RobotControlNode(ManagedNode, ABC):
         logger.info(f"  Robot type: {config.robot_type}")
         logger.info(f"  Interface: {config.interface.mode}")
         logger.info(
-            f"  Control rate: {config.control.rate_hz}Hz ({self.dt*1000:.2f}ms period)"
+            f"  Control rate: {config.control.rate_hz}Hz ({self.dt * 1000:.2f}ms period)"
         )
         logger.info(
             f"  Velocity limiting: {'enabled' if self.velocity_limiting_enabled else 'disabled'} "
@@ -322,8 +322,8 @@ class RobotControlNode(ManagedNode, ABC):
         # Log overtime warnings
         if timing["overtime"]:
             logger.debug(
-                f"Loop overtime: {timing['elapsed']*1000:.2f}ms "
-                f"(target: {self.dt*1000:.2f}ms)"
+                f"Loop overtime: {timing['elapsed'] * 1000:.2f}ms "
+                f"(target: {self.dt * 1000:.2f}ms)"
             )
 
         # Log statistics every 100 loops
@@ -450,7 +450,7 @@ class RobotControlNode(ManagedNode, ABC):
         self,
         target_joints: np.ndarray,
         timeout_sec: float = 5.0,
-        max_velocity_rad_s: Optional[float] = None,
+        max_velocity_rad_s: float | None = None,
     ) -> bool:
         """Move to target position with velocity limiting and smooth interpolation.
 
@@ -554,7 +554,7 @@ class RobotControlNode(ManagedNode, ABC):
         logger.success(f"Reached safe position in {elapsed:.2f}s")
         return True
 
-    def go_to_safe_position(self, max_velocity_rad_s: Optional[float] = None):
+    def go_to_safe_position(self, max_velocity_rad_s: float | None = None):
         """Move robot to safe position with velocity limiting.
 
         This method can be overridden by subclasses to provide robot-specific
@@ -631,6 +631,15 @@ class RobotControlNode(ManagedNode, ABC):
     # ----------------------
     # ManagedNode lifecycle hooks
     # ----------------------
+    def on_standby(self) -> None:
+        """Called when entering STANDBY state (on run() or CTRL_STANDBY).
+
+        Initializes the control loop (signal handlers, velocity limiting
+        state) so the node is ready for a fast CTRL_START transition.
+        """
+        logger.info(f"{self.node_id} entering STANDBY -- control loop initializing")
+        self._initialize_control_loop()
+
     def on_start(self) -> None:
         """Called when START command is received.
 

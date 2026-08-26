@@ -53,7 +53,7 @@ class TopicSubscriber(Generic[T]):
 
     Satisfies the minimal ``SubscriberProtocol`` expected by hand and arm
     teleop nodes (the ``read()`` method).  It does *not* implement the full
-    ``DataSubscriber`` landscape protocol — use it when you only need typed
+    ``DataSubscriber`` landscape protocol -- use it when you only need typed
     message consumption.
 
     Args:
@@ -288,7 +288,7 @@ class TopicSubscriber(Generic[T]):
             self._last_timestamp = unpacked.get("timestamp")
             return unpacked
         except zmq.Again:
-            # Timeout — normal, not an error
+            # Timeout -- normal, not an error
             return None
         except zmq.ZMQError as exc:
             logger.warning(
@@ -308,7 +308,7 @@ class TopicSubscriber(Generic[T]):
 
         Used by ``read_latest()`` and ``read_latest_batch()`` to drain the
         receive queue.  Returns ``None`` immediately when the queue is empty
-        (``zmq.Again``) — never waits for ``timeout_ms``.
+        (``zmq.Again``) -- never waits for ``timeout_ms``.
 
         Returns:
             Unpacked dict, or ``None`` if the queue is empty or an error occurs.

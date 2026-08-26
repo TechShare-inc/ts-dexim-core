@@ -62,8 +62,9 @@ class HardwarePublisherNode(ManagedNode):
             # ManagedNode ensures context initialization; guard for completeness
             self._ctx = zmq.Context.instance()
         pub = self._ctx.socket(zmq.PUB)
-        # Avoid blocking on close
+        # Avoid blocking on close; limit buffer to prevent unbounded memory growth
         pub.setsockopt(zmq.LINGER, 0)
+        pub.setsockopt(zmq.SNDHWM, 100)
         if self._bind:
             pub.bind(self._data_endpoint)
         else:
@@ -73,6 +74,11 @@ class HardwarePublisherNode(ManagedNode):
     # ----------------------
     # ManagedNode hooks
     # ----------------------
+    def on_standby(self) -> None:
+        """Enter STANDBY: prepare tick schedule for fast START."""
+        if self._rate_hz and self._rate_hz > 0:
+            self._next_tick_ts = time.time()
+
     def on_start(self) -> None:
         # Reset tick schedule on start
         if self._rate_hz and self._rate_hz > 0:
@@ -157,7 +163,7 @@ class HardwarePublisherNode(ManagedNode):
                 [topic_frame, payload_frame], flags=zmq.DONTWAIT
             )
         except zmq.Again:
-            # DONTWAIT drop — expected when no subscribers or HWM reached; non-fatal.
+            # DONTWAIT drop -- expected when no subscribers or HWM reached; non-fatal.
             logger.debug(f"Dropped frame on topic {topic!r}: no subscriber or HWM")
         except Exception as e:
             logger.debug(f"Failed to send message on topic {topic!r}: {e}")

@@ -14,8 +14,8 @@ Example:
     from dexim.core.model.filtering import WeightedMovingFilter
     from dexim.core.model.visualizer import BaseRobotVisualizer
 """
-from __future__ import annotations
 
+from __future__ import annotations
 
 from dexim.core.model.base_hand_model import BaseHandModel
 from dexim.core.model.helpers import replace_package_url_in_content

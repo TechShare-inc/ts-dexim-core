@@ -176,7 +176,7 @@ class TargetBufferWriter:
 
     Args:
         shm: Shared-memory block created by :func:`create_target_shm`.
-        num_joints: Number of active joints (must be ≤ ``MAX_JOINTS``).
+        num_joints: Number of active joints (must be <= ``MAX_JOINTS``).
     """
 
     def __init__(self, shm: SharedMemory, num_joints: int) -> None:
@@ -199,11 +199,11 @@ class TargetBufferWriter:
             timestamp: Optional timestamp; defaults to ``time.time()``.
         """
         ts = timestamp if timestamp is not None else time.time()
-        seqlock_begin_write(self._shm)  # → odd
+        seqlock_begin_write(self._shm)  # -> odd
         self._buf.timestamp = ts
         for i in range(self._nq):
             self._buf.joint_angles[i] = float(joint_angles[i])
-        seqlock_end_write(self._shm)  # → even
+        seqlock_end_write(self._shm)  # -> even
 
     def close(self) -> None:
         """Release the ctypes buffer reference so the underlying SHM can be closed."""
@@ -251,7 +251,7 @@ class TargetBufferReader:
         for _ in range(self._max_retries):
             seq1 = seqlock_read_seq(self._shm)
             if seq1 % 2 != 0:
-                # Writer is active — spin without sleeping to minimise latency.
+                # Writer is active -- spin without sleeping to minimise latency.
                 continue
             angles = np.array(self._buf.joint_angles[: self._nq], dtype=np.float32)
             timestamp = self._buf.timestamp
@@ -261,7 +261,7 @@ class TargetBufferReader:
                 self._last_angles = angles
                 self._last_timestamp = timestamp
                 return angles, timestamp
-            # Torn read — retry.
+            # Torn read -- retry.
         # Fallback: return last known-good values.
         return self._last_angles.copy(), self._last_timestamp
 
@@ -280,7 +280,7 @@ class StateBufferWriter:
 
     Args:
         shm: Shared-memory block created by :func:`create_state_shm`.
-        num_joints: Number of active joints (must be ≤ ``MAX_JOINTS``).
+        num_joints: Number of active joints (must be <= ``MAX_JOINTS``).
     """
 
     def __init__(self, shm: SharedMemory, num_joints: int) -> None:
@@ -310,13 +310,13 @@ class StateBufferWriter:
         vels = joint_velocities if joint_velocities is not None else np.zeros(self._nq)
         taus = joint_torques if joint_torques is not None else np.zeros(self._nq)
 
-        seqlock_begin_write(self._shm)  # → odd
+        seqlock_begin_write(self._shm)  # -> odd
         self._buf.timestamp = ts
         for i in range(self._nq):
             self._buf.joint_angles[i] = float(joint_angles[i])
             self._buf.joint_velocities[i] = float(vels[i])
             self._buf.joint_torques[i] = float(taus[i])
-        seqlock_end_write(self._shm)  # → even
+        seqlock_end_write(self._shm)  # -> even
 
     def close(self) -> None:
         """Release the ctypes buffer reference so the underlying SHM can be closed."""

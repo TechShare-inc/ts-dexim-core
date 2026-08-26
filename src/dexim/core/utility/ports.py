@@ -60,7 +60,10 @@ NODE_DATA_PORTS: dict[str, int] = {
     "manus": 5555,
     "hand_tracking": 5556,
     "camera": 5557,
-    "realsense": 5568,
+    "realsense": 5568,  # legacy alias for realsense_left
+    "realsense_left": 5568,
+    "realsense_right": 5569,
+    "realsense_ego": 5570,
     "robot_state": 5558,
     "nova_left": 5559,
     "nova_right": 5560,
@@ -261,8 +264,7 @@ def parse_endpoint(endpoint: str) -> tuple[str, int]:
     match = _ENDPOINT_PATTERN.match(endpoint)
     if not match:
         raise ValueError(
-            f"Invalid endpoint format: '{endpoint}'. "
-            f"Expected format: 'tcp://host:port'"
+            f"Invalid endpoint format: '{endpoint}'. Expected format: 'tcp://host:port'"
         )
     host = match.group(1)
     port = int(match.group(2))

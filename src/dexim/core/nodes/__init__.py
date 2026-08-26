@@ -5,14 +5,14 @@ that can be controlled by a central orchestrator using ZMQ messaging.
 
 Node Hierarchy:
     ManagedNode: Abstract base for all orchestrator-controlled nodes
-    ├── DeviceNode: Node owning a hardware/simulation interface (disconnect on shutdown)
-    │   ├── PublisherDeviceNode: Role marker — publish-only (sensors/cameras)
-    │   ├── SubscriberDeviceNode: Role marker — pure-actuator (command sinks)
-    │   └── PubSubDeviceNode: Base for bidirectional nodes (read state + write commands)
-    │       └── Subclass must implement _run_pipeline()
-    ├── HardwarePublisherNode: For hardware data publishing nodes
-    ├── CommandNode: For command publishing nodes
-    └── RecorderNode: For data recording nodes
+    +-- DeviceNode: Node owning a hardware/simulation interface (disconnect on shutdown)
+    |   +-- PublisherDeviceNode: Role marker -- publish-only (sensors/cameras)
+    |   +-- SubscriberDeviceNode: Role marker -- pure-actuator (command sinks)
+    |   +-- PubSubDeviceNode: Base for bidirectional nodes (read state + write commands)
+    |       +-- Subclass must implement _run_pipeline()
+    +-- HardwarePublisherNode: For hardware data publishing nodes
+    +-- CommandNode: For command publishing nodes
+    +-- RecorderNode: For data recording nodes
 
 Protocols:
     DataSubscriber: Protocol for data subscribers
@@ -41,7 +41,6 @@ from __future__ import annotations
 # Base node classes
 from dexim.core.nodes.command_node import CommandNode
 from dexim.core.nodes.device_node import (
-    DeviceInterface,
     DeviceNode,
     PublisherDeviceNode,
     PubSubDeviceNode,

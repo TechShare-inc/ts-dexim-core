@@ -14,6 +14,7 @@ mapping regardless of the number of robots or trackers in the workspace.
 Author: Haoyan Li
 Date: November 19, 2025
 """
+
 from __future__ import annotations
 
 import json
@@ -32,11 +33,13 @@ from loguru import logger
 
 from .transform import Transform3D, rigid_transform
 
+
 @runtime_checkable
 class TrackerDataProtocol(Protocol):
     """Protocol for tracker data from parsing."""
 
     transform: Transform3D
+
 
 @runtime_checkable
 class DataSubscriberProtocol(Protocol):
@@ -52,6 +55,7 @@ class DataSubscriberProtocol(Protocol):
 
         ...
 
+
 @runtime_checkable
 class TrackerParserProtocol(Protocol):
     """Protocol for tracker data parsers."""
@@ -62,6 +66,7 @@ class TrackerParserProtocol(Protocol):
         """Parse tracker data by type."""
 
         ...
+
 
 def calibrate_world(
     origin: Transform3D, x_point: Transform3D, y_point: Transform3D
@@ -109,7 +114,7 @@ def calibrate_world(
         measured_points, reference_points, calc_scale=False
     )
 
-    logger.info("✅ Transformation matrix calculated using ts_spatial.rigid_transform")
+    logger.info("[OK] Transformation matrix calculated using ts_spatial.rigid_transform")
     logger.debug(f"Rotation matrix determinant: {np.linalg.det(R_matrix):.6f}")
     logger.debug(f"Translation vector: {t_vector.flatten()}")
 
@@ -119,6 +124,7 @@ def calibrate_world(
     wM_base[:3, 3] = t_vector.flatten()
 
     return wM_base
+
 
 def save_world_calibration(
     matrix: npt.NDArray,
@@ -171,6 +177,7 @@ def save_world_calibration(
     logger.success(f"World calibration saved to: {filepath}")
     return filepath
 
+
 def load_world_calibration(calib_dir: Path = Path("calibrations")) -> npt.NDArray:
     """
     Load world calibration matrix from JSON file.
@@ -200,6 +207,7 @@ def load_world_calibration(calib_dir: Path = Path("calibrations")) -> npt.NDArra
 
     matrix = np.array(data["world_to_tracker"])
     return matrix
+
 
 def calibrate_world_interactive(
     subscriber: DataSubscriberProtocol,
@@ -285,6 +293,7 @@ def calibrate_world_interactive(
     logger.success(f"Calibration complete! Average error: {error_mm:.2f} mm")
 
     return wM_base, ref_points, meas_points
+
 
 def calibrate_world_iter(
     subscriber: DataSubscriberProtocol,
@@ -383,9 +392,11 @@ def calibrate_world_iter(
 
     return wM_base, ref_points, meas_points
 
+
 # ============================================================================
 # Backward compatibility aliases for Nova tracker calibration
 # ============================================================================
+
 
 def calibrate_nova_tracker(
     origin: Transform3D, x_point: Transform3D, y_point: Transform3D
@@ -413,6 +424,7 @@ def calibrate_nova_tracker(
         stacklevel=2,
     )
     return calibrate_world(origin, x_point, y_point)
+
 
 def save_calibration(
     matrix: npt.NDArray,
@@ -476,6 +488,7 @@ def save_calibration(
     logger.success(f"Calibration saved to: {filepath}")
     return filepath
 
+
 def load_calibration(calib_dir: Path = Path("calibrations")) -> npt.NDArray:
     """
     Load calibration matrix from JSON file (Nova naming convention).
@@ -516,6 +529,7 @@ def load_calibration(calib_dir: Path = Path("calibrations")) -> npt.NDArray:
 
     matrix = np.array(data["world_to_tracker"])
     return matrix
+
 
 def calibrate_nova_tracker_interactive(
     subscriber: DataSubscriberProtocol,

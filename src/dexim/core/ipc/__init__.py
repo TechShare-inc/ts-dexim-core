@@ -1,4 +1,4 @@
-"""dexim.core.ipc — Lock-free inter-process communication primitives.
+"""dexim.core.ipc -- Lock-free inter-process communication primitives.
 
 Provides SeqLock-based shared-memory buffers for real-time robot control
 across OS processes.  The design guarantees that a crashed or stalled writer

@@ -67,6 +67,7 @@ __all__ = [
     # Base configs
     "SubscriberConfig",
     "ControlConfig",
+    "FilterConfig",
     "SimInterfaceConfig",
     "TCPIPProtocolConfig",
     "RS485ProtocolConfig",

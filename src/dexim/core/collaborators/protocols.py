@@ -39,7 +39,7 @@ class WaitableSubscriberProtocol(Protocol):
     def wait_for_sensor(
         self,
         sensor_type: str,
-        handedness: str,
+        side: str,
         glove_id: str | int | None,
         timeout_sec: float,
         poll_interval_sec: float,
@@ -49,7 +49,7 @@ class WaitableSubscriberProtocol(Protocol):
 
         Args:
             sensor_type: Type of sensor to wait for (e.g. ``"skeleton", "ergonomics"``).
-            handedness: ``"left"`` or ``"right"``.
+            side: ``"left"`` or ``"right"``.
             glove_id: Expected glove ID, or None.
             timeout_sec: Maximum wait time.
             poll_interval_sec: Polling interval.

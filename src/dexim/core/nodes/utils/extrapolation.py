@@ -28,7 +28,7 @@ import numpy as np
 
 
 class TargetExtrapolator:
-    """Velocity-based target extrapolator — the "Chasing the Carrot" method.
+    """Velocity-based target extrapolator -- the "Chasing the Carrot" method.
 
     On each call to :meth:`extrapolate` the class:
 
@@ -94,7 +94,7 @@ class TargetExtrapolator:
         target = np.asarray(target_q, dtype=np.float64)
 
         if self._prev_target is None:
-            # First call — bootstrap with no velocity.
+            # First call -- bootstrap with no velocity.
             self._prev_target = target.copy()
             return np.clip(target, self._joint_min, self._joint_max)
 

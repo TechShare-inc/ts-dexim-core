@@ -24,6 +24,7 @@ from dexim.core.messages import (
     CTRL_PUB_ENDPOINT,
     CTRL_SET_TASK,
     CTRL_SHUTDOWN,
+    CTRL_STANDBY,
     CTRL_START,
     CTRL_START_PUB,
     CTRL_START_REC,
@@ -36,8 +37,11 @@ from dexim.core.messages import (
     STATUS_PAUSED,
     STATUS_PULL_ENDPOINT,
     STATUS_SHUTTING_DOWN,
+    STATUS_STANDBY,
     STATUS_STARTED,
+    STATUS_STARTING,
     TOPIC_CTRL,
+    StatusInfo,
     pack_status_message,
 )
 
@@ -66,6 +70,12 @@ class ManagedNode(abc.ABC):
         self.running: bool = False
         self._last_heartbeat_ts: float = 0.0
 
+        # Countdown state (used by subclasses that want a start delay)
+        self._countdown_duration: float = 0.0  # Seconds; 0 = no countdown
+        self._countdown_end_ts: float = 0.0
+        self._countdown_active: bool = False
+        self._last_reported_second: int = -1
+
         # ZMQ context and sockets
         self._ctx: zmq.Context | None = None
         self._sub_control: zmq.Socket | None = None
@@ -84,13 +94,15 @@ class ManagedNode(abc.ABC):
     # Public lifecycle
     # ----------------------
     def run(self) -> None:
-        """Main loop: poll control, iterate subclass work, send heartbeats."""
+        """Main loop: enter standby, poll control, iterate subclass work, send heartbeats."""
         self.running = True
-        self.report_status(STATUS_STARTED)
+        self.on_standby()
+        self.report_status(STATUS_STANDBY)
 
         try:
             while self.running:
                 self._poll_once(timeout_ms=_CTRL_POLL_TIMEOUT_MS)
+                self._pre_loop_iteration()
                 # logger.debug("ManagedNode main loop iteration")
                 self._main_loop_iteration()
                 # logger.debug("ManagedNode completed main loop iteration")
@@ -110,6 +122,19 @@ class ManagedNode(abc.ABC):
     # ----------------------
     # Abstract hooks
     # ----------------------
+    @abc.abstractmethod
+    def on_standby(self) -> None:
+        """Called when entering STANDBY state (on run() entry or CTRL_STANDBY command).
+
+        The node is in a ready-but-idle state: interface connected, main loop
+        running, but teleoperation is not active.  This is the default state
+        after ``run()`` is called and before ``CTRL_START`` is received.
+
+        Subclasses should connect hardware interfaces and perform one-time
+        setup that does not require runtime data (e.g., tracker reference
+        poses).  Publishing should remain deactivated.
+        """
+
     @abc.abstractmethod
     def on_start(self) -> None:
         """Called when START command is received (node lifecycle)."""
@@ -157,6 +182,101 @@ class ManagedNode(abc.ABC):
         """Subclass work executed each loop iteration."""
 
     # ----------------------
+    # Countdown helpers
+    # ----------------------
+
+    def _start_countdown(self, duration: float) -> None:
+        """Begin a start countdown of *duration* seconds.
+
+        During the countdown the main loop continues to run, control messages
+        are still polled (so CTRL_STOP aborts the countdown), and status
+        reports include ``STARTING`` with a ``countdown_remaining`` field.
+
+        When the countdown expires ``_teleop_active`` is set to ``True``
+        and the node transitions to RUNNING.
+
+        Args:
+            duration: Countdown length in seconds.  Pass ``0.0`` to skip.
+        """
+        self._countdown_duration = duration
+        self._countdown_end_ts = time.time() + duration
+        self._countdown_active = duration > 0.0
+        self._last_reported_second = -1
+
+    def _tick_countdown(self) -> bool:
+        """Advance the countdown timer.
+
+        Returns:
+            ``True`` when the countdown has expired (or was never active).
+        """
+        if not self._countdown_active:
+            return True
+        if time.time() >= self._countdown_end_ts:
+            self._countdown_active = False
+            return True
+        return False
+
+    # ----------------------
+    # Pre-loop hook + auto-prepare
+    # ----------------------
+
+    def _pre_loop_iteration(self) -> None:
+        """Run before ``_main_loop_iteration()`` each tick.
+
+        Responsibilities:
+        1. Tick the start countdown -- transition to RUNNING when it expires.
+        2. Call ``_auto_prepare()`` when in STANDBY (no countdown, no teleop).
+        """
+        if self._countdown_active:
+            if self._tick_countdown():
+                # Countdown expired -- activate teleoperation.
+                self._countdown_active = False
+                self._teleop_active = True
+                self.is_publishing = True
+                self.report_status(STATUS_STARTED)
+                print(f"{self.node_id} countdown complete -- teleoperation active")
+            else:
+                # Still counting down -- report progress at second boundaries.
+                remaining = self._countdown_end_ts - time.time()
+                second = int(remaining)
+                if second != self._last_reported_second:
+                    self._last_reported_second = second
+                    self.report_status(
+                        STATUS_STARTING,
+                        {"countdown_remaining": round(remaining, 1)},
+                    )
+                    print(f"{self.node_id} starting in {max(remaining, 0.0):.0f}s")
+            return  # Don't auto-prepare during countdown
+
+        if not self._teleop_active:
+            auto_cmd = self._auto_prepare()
+            if auto_cmd == CTRL_START:
+                # Auto-start: transition to RUNNING without countdown.
+                self.on_start()
+                self._teleop_active = True
+                self.is_publishing = True
+                self.report_status(STATUS_STARTED)
+                print(f"{self.node_id} auto-started -- {auto_cmd}")
+
+    def _auto_prepare(self) -> str | None:
+        """Override in subclasses to perform automatic preparation during STANDBY.
+
+        Called each tick while the node is in STANDBY (no countdown active,
+        teleop inactive).  Use this to check data availability, warm up
+        subsystems, or log readiness status -- everything that should happen
+        automatically without waiting for ``CTRL_START``.
+
+        When the node is ready to run, return a control command string
+        (e.g., ``CTRL_START``) to trigger an automatic transition.  The
+        transition bypasses any countdown so the node moves directly to
+        RUNNING.
+
+        Returns:
+            A control command to auto-apply, or ``None`` to stay in STANDBY.
+        """
+        return None
+
+    # ----------------------
     # ZMQ setup/teardown
     # ----------------------
     def _initialize_zmq(self) -> None:
@@ -171,6 +291,7 @@ class ManagedNode(abc.ABC):
 
         # Status: PUSH
         push = ctx.socket(zmq.PUSH)
+        push.setsockopt(zmq.SNDHWM, 10)  # Prevent unbounded buffering when no consumer
         push.connect(self._status_endpoint)
         self._push_status = push
 
@@ -233,14 +354,25 @@ class ManagedNode(abc.ABC):
 
         # Teleoperation control
         if cmd == CTRL_START:
-            # START: Begin teleoperation, capture reference pose
-            # Call on_start() BEFORE setting _teleop_active to ensure
-            # reference poses are captured before processing begins
+            # START: Begin teleoperation, capture reference pose.
+            # Call on_start() BEFORE any state change to ensure reference
+            # poses are captured while the pipeline is still idle.
             self.on_start()
-            self._teleop_active = True
-            self.is_publishing = True
-            self.report_status(STATUS_STARTED)
-            print(f"{self.node_id} started teleoperation")
+            if self._countdown_duration > 0.0:
+                # Start countdown -- _pre_loop_iteration will transition
+                # to RUNNING when it expires.
+                self._start_countdown(self._countdown_duration)
+                self.report_status(
+                    STATUS_STARTING, {"countdown_remaining": self._countdown_duration}
+                )
+                print(
+                    f"{self.node_id} start requested -- countdown {self._countdown_duration:.0f}s"
+                )
+            else:
+                self._teleop_active = True
+                self.is_publishing = True
+                self.report_status(STATUS_STARTED)
+                print(f"{self.node_id} started teleoperation")
 
         elif cmd == CTRL_PAUSE:
             # PAUSE: Pause teleoperation, hold current position (quick resume)
@@ -250,11 +382,22 @@ class ManagedNode(abc.ABC):
             print(f"{self.node_id} paused")
 
         elif cmd == CTRL_STOP:
-            # STOP: Stop teleoperation, go to safe position
+            # STOP: Stop teleoperation, cancel countdown, go to safe position
             self._teleop_active = False
+            self._countdown_active = False
             self.on_stop()
             self.report_status(STATUS_PAUSED)
             print(f"{self.node_id} stopped (safe position)")
+
+        elif cmd == CTRL_STANDBY:
+            # STANDBY: Return to ready-but-idle state (keep interface connected).
+            if self._teleop_active or self._countdown_active:
+                self._teleop_active = False
+                self._countdown_active = False
+                self.is_publishing = False
+            self.on_standby()
+            self.report_status(STATUS_STANDBY)
+            print(f"{self.node_id} entered standby")
 
         elif cmd == CTRL_START_PUB:
             # START_PUB: Resume publishing
@@ -275,7 +418,11 @@ class ManagedNode(abc.ABC):
             print(f"{self.node_id} publishing stopped")
 
         elif cmd == CTRL_SHUTDOWN:
-            # SHUTDOWN: Node stops and exits
+            # SHUTDOWN: Stop teleop safely, cancel countdown, then exit.
+            if self._teleop_active or self._countdown_active:
+                self._teleop_active = False
+                self._countdown_active = False
+                self.on_stop()
             self.is_recording = False
             self.running = False
             # on_shutdown called in finally of run()
@@ -321,21 +468,82 @@ class ManagedNode(abc.ABC):
     # ----------------------
     # Status/heartbeat
     # ----------------------
-    def report_status(self, status: str, info: dict[str, Any] | None = None) -> None:
+
+    def get_status_info(self) -> StatusInfo:
+        """Return a snapshot of the node's runtime state.
+
+        Subclasses override this to add type-specific fields
+        (robot variant, pipeline stats, hardware connection, etc.).
+        The base implementation covers fields managed by
+        ``ManagedNode`` itself.
+
+        Returns:
+            A ``StatusInfo`` with base fields populated.
+        """
+        countdown_remaining: float | None = None
+        if self._countdown_active:
+            remaining = self._countdown_end_ts - time.time()
+            countdown_remaining = max(0.0, remaining)
+
+        return StatusInfo(
+            is_publishing=self.is_publishing,
+            teleop_active=self._teleop_active,
+            countdown_active=self._countdown_active,
+            countdown_remaining=countdown_remaining,
+        )
+
+    def report_status(
+        self,
+        status: str,
+        info: dict[str, Any] | StatusInfo | None = None,
+    ) -> None:
+        """Publish a status update on the ZMQ status plane.
+
+        Args:
+            status: One of the ``STATUS_*`` constants.
+            info: Extra fields as a ``dict`` or ``StatusInfo``.
+                When ``None``, ``get_status_info()`` is called
+                automatically.
+        """
         if self._push_status is None:
             return
+
+        resolved_info: dict[str, Any] | StatusInfo
+        if info is not None:
+            # Caller-supplied info (e.g. countdown, error context)
+            # takes precedence but still includes is_publishing.
+            if isinstance(info, StatusInfo):
+                resolved_info = info
+            else:
+                resolved_info = {
+                    "is_publishing": self.is_publishing,
+                    **info,
+                }
+        else:
+            # No explicit info -- build from get_status_info().
+            resolved_info = self.get_status_info()
+
         payload = pack_status_message(
             node_id=self.node_id,
             status=status,
             is_recording=self.is_recording,
             timestamp=time.time(),
-            info={"is_publishing": self.is_publishing, **(info or {})},
+            info=resolved_info,
         )
-        # Status plane is PUSH → PULL; single frame payload
-        self._push_status.send(payload, flags=zmq.DONTWAIT)
+        # Status plane is PUSH -> PULL; single frame payload.
+        # DONTWAIT + low SNDHWM means this drops silently when no
+        # orchestrator is consuming status messages -- non-fatal.
+        try:
+            self._push_status.send(payload, flags=zmq.DONTWAIT)
+        except zmq.Again:
+            pass  # Expected when no PULL consumer or buffer is full
+        except zmq.ZMQError:
+            pass  # Socket may be in a bad state during shutdown
 
     def send_heartbeat_if_needed(self) -> None:
+        if self._countdown_active:
+            return  # Status reported by _pre_loop_iteration during countdown
         now = time.time()
         if now - self._last_heartbeat_ts >= self.heartbeat_interval:
-            self.report_status(STATUS_HEALTHY)
+            self.report_status(STATUS_HEALTHY, info=self.get_status_info())
             self._last_heartbeat_ts = now

@@ -4,6 +4,7 @@ URDF loading utilities for robot models.
 This module provides unified functions for loading URDF models with Pinocchio,
 handling package:// URL replacement automatically.
 """
+
 from __future__ import annotations
 
 import os
@@ -19,6 +20,7 @@ except ImportError as _err:
     ) from _err
 
 from .helpers import replace_package_url_in_content
+
 
 def load_urdf_model(
     packages_dir: str | Path,
@@ -89,12 +91,13 @@ def load_urdf_model(
         # Load model from temporary file
         model = pin.buildModelFromUrdf(temp_urdf_path, mimic=mimic)  # type: ignore
         if verbose:
-            print(f"✅ Model loaded from {urdf_path} (via temp file)")
+            print(f"[OK] Model loaded from {urdf_path} (via temp file)")
     finally:
         # Clean up temporary file
         os.unlink(temp_urdf_path)
 
     return model
+
 
 def load_urdf_models(
     packages_dir: str | Path,
@@ -174,11 +177,12 @@ def load_urdf_models(
             mimic=mimic,  # type: ignore
         )
         if verbose:
-            print(f"✅ Models loaded from {urdf_path} (via temp file)")
+            print(f"[OK] Models loaded from {urdf_path} (via temp file)")
     finally:
         # Clean up temporary file
         os.unlink(temp_urdf_path)
 
     return model, collision_model, visual_model
+
 
 __all__ = ["load_urdf_model", "load_urdf_models"]

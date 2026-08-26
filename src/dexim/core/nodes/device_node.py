@@ -1,4 +1,4 @@
-"""DeviceNode — ManagedNode subclass with a formal device interface slot.
+"""DeviceNode -- ManagedNode subclass with a formal device interface slot.
 
 Imports ``DeviceInterface`` from ``dexim.core.robot_interface`` and re-exports
 it for backward compatibility.  Adds a concrete ``on_shutdown()`` that
@@ -10,7 +10,7 @@ Role subclasses
 PublisherDeviceNode
     Publish-only devices (sensors/cameras), e.g. RealSense, Manus glove.
 SubscriberDeviceNode
-    Pure-actuator devices (command sinks only) — reserved for future use.
+    Pure-actuator devices (command sinks only) -- reserved for future use.
 PubSubDeviceNode
     Bidirectional devices: read state *and* write commands, e.g. Inspire
     hand, Tesollo hand, Nova arm.
@@ -51,6 +51,25 @@ class DeviceNode(ManagedNode):
 
     interface: Any
 
+    def on_standby(self) -> None:
+        """Connect the device interface so the node is ready for a fast START.
+
+        Called when ``run()`` begins and on ``CTRL_STANDBY``.  Subclasses
+        may override to add standby-specific setup, but must call
+        ``super().on_standby()`` to ensure the interface is connected.
+
+        Raises:
+            Nothing -- all exceptions from ``connect()`` are swallowed and
+            logged at DEBUG level.
+        """
+        try:
+            self.interface.connect()
+        except Exception as exc:  # noqa: BLE001
+            from loguru import logger
+
+            logger.debug(f"{self.node_id} interface.connect() in standby raised: {exc}")
+        super().on_standby()
+
     def on_shutdown(self) -> None:
         """Disconnect the device interface, then delegate to super().
 
@@ -59,7 +78,7 @@ class DeviceNode(ManagedNode):
         ``ManagedNode.run()``.
 
         Raises:
-            Nothing — all exceptions from ``disconnect()`` are swallowed and
+            Nothing -- all exceptions from ``disconnect()`` are swallowed and
             logged at DEBUG level.
         """
         try:

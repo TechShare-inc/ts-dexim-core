@@ -59,6 +59,9 @@ class ControlConfig:
     timeout_sec: float = 1.0
     safe_position_on_timeout: bool = True
     move_to_home_at_start: bool = False
+    start_countdown_sec: float = (
+        0.0  # Seconds before _teleop_active after CTRL_START; 0 = instant
+    )
 
     # Velocity limiting
     enable_velocity_limiting: bool = True
@@ -140,21 +143,21 @@ class FilterConfig:
 
     Three filter types are available, selected via ``type``:
 
-    * ``"wma"`` (default) — Weighted Moving Average (FIR).  Set ``weights``
+    * ``"wma"`` (default) -- Weighted Moving Average (FIR).  Set ``weights``
       (must sum to 1.0).
-    * ``"ema"`` — Exponential Moving Average (first-order IIR).  Set
+    * ``"ema"`` -- Exponential Moving Average (first-order IIR).  Set
       ``alpha`` in ``(0, 1]``.
-    * ``"one_euro"`` — One Euro Filter (adaptive IIR).  Set ``freq``,
+    * ``"one_euro"`` -- One Euro Filter (adaptive IIR).  Set ``freq``,
       ``min_cutoff``, ``beta``, and ``d_cutoff``.
 
     Attributes:
-        type: Filter algorithm — ``"wma"``, ``"ema"``, or ``"one_euro"``.
+        type: Filter algorithm -- ``"wma"``, ``"ema"``, or ``"one_euro"``.
         weights: WMA weights (must sum to 1.0).  Used when ``type="wma"``.
         alpha: EMA smoothing factor in ``(0, 1]``.  Used when ``type="ema"``.
         freq: Sampling frequency in Hz.  Used when ``type="one_euro"``.
         min_cutoff: Minimum cutoff frequency in Hz.  Used when
             ``type="one_euro"``.
-        beta: Speed coefficient ≥ 0.  Used when ``type="one_euro"``.
+        beta: Speed coefficient >= 0.  Used when ``type="one_euro"``.
         d_cutoff: Derivative cutoff frequency in Hz.  Used when
             ``type="one_euro"``.
     """
@@ -282,19 +285,19 @@ class NovaConfig:
     """
 
     control_mode: str = "relative_pose"
-    handedness: str = "left"  # "left" or "right" - determines tracker name only
+    side: str = "left"  # "left" or "right" - determines tracker name only
     calibration_file: str | None = None  # Path to calibration JSON
     home_joints_deg: list[float] = field(
-        default_factory=lambda: [0.0] * 6
+        default_factory=lambda: [0.0, -80.0, -10.0, 90.0, 90.0, 0.0]
     )  # Joint angles in degrees
     base_offset: BaseOffsetConfig | None = None
 
     def __post_init__(self):
         """Validate configuration."""
 
-        if self.handedness not in ["left", "right"]:
+        if self.side not in ["left", "right"]:
             raise ValueError(
-                f"Invalid handedness: {self.handedness}. Must be 'left' or 'right'"
+                f"Invalid side: {self.side}. Must be 'left' or 'right'"
             )
 
         if len(self.home_joints_deg) != 6:
@@ -376,13 +379,13 @@ class InspireConfig:
     )
 
     alpha: list[float] = field(default_factory=lambda: [1.0] * 5)
-    handedness: str = "left"
+    side: str = "left"
     active_dofs_override: int | None = None
 
     def __post_init__(self):
-        if self.handedness not in ["left", "right"]:
+        if self.side not in ["left", "right"]:
             raise ValueError(
-                f"Invalid handedness for InspireConfig: {self.handedness}. Must be 'left' or 'right'"
+                f"Invalid side for InspireConfig: {self.side}. Must be 'left' or 'right'"
             )
 
         if not isinstance(self.alpha, list) or len(self.alpha) != 5:
@@ -514,7 +517,7 @@ class DH5RealConfig:
 class DH5Config:
     """DH5 hand-specific configuration."""
 
-    handedness: str = "left"  # "left" or "right"
+    side: str = "left"  # "left" or "right"
     feature_extraction: dict[str, Any] = field(
         default_factory=lambda: {
             "src_indices": [1, 6, 11, 16, 21],  # Metacarpals
@@ -527,9 +530,9 @@ class DH5Config:
     )  # Scaling factors
 
     def __post_init__(self):
-        if self.handedness not in ["left", "right"]:
+        if self.side not in ["left", "right"]:
             raise ValueError(
-                f"Invalid handedness for DH5Config: {self.handedness}. Must be 'left' or 'right'"
+                f"Invalid side for DH5Config: {self.side}. Must be 'left' or 'right'"
             )
 
 

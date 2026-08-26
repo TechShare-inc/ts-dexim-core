@@ -1,8 +1,9 @@
 """Spatial transformation utilities for joint transforms and poses."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, overload
+from typing import Any, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -25,27 +26,33 @@ except ImportError:
 
 # =================== EXCEPTIONS ===================
 
+
 class SrcDstSizeMismatchError(Exception):
     """Raised when source and destination point sets have different sizes."""
 
     pass
+
 
 class InvalidPointDimError(Exception):
     """Raised when points have invalid dimensions (not 2D or 3D)."""
 
     pass
 
+
 class NotEnoughPointsError(Exception):
     """Raised when there are not enough points for transformation calculation."""
 
     pass
+
 
 class RankDeficiencyError(Exception):
     """Raised when the point set has insufficient rank for transformation."""
 
     pass
 
+
 # =================== RIGID TRANSFORM FUNCTION ===================
+
 
 def rigid_transform(
     src_pts: np.ndarray, dst_pts: np.ndarray, calc_scale: bool = False
@@ -135,7 +142,9 @@ def rigid_transform(
 
     return R, t, scale
 
+
 # =================== TRANSFORM3D CLASS ===================
+
 
 @dataclass
 class Transform3D:
@@ -271,7 +280,7 @@ class Transform3D:
     # =================== CLASS METHODS ===================
 
     @classmethod
-    def from_matrix(cls, matrix: npt.NDArray) -> "Transform3D":
+    def from_matrix(cls, matrix: npt.NDArray) -> Transform3D:
         """Create Transform3D from a 4x4 transformation matrix."""
 
         if matrix.shape != (4, 4):
@@ -279,7 +288,7 @@ class Transform3D:
         return cls(homogeneous=matrix)
 
     @classmethod
-    def from_pin_SE3(cls, se3) -> "Transform3D":
+    def from_pin_SE3(cls, se3) -> Transform3D:
         """Create Transform3D from a Pinocchio SE3 object.
 
         Requires pinocchio to be installed.
@@ -294,7 +303,7 @@ class Transform3D:
         return cls(homogeneous=transform_matrix)
 
     @classmethod
-    def from_json_node(cls, node_data: Dict[str, Any]) -> "Transform3D":
+    def from_json_node(cls, node_data: dict[str, Any]) -> Transform3D:
         """Create Transform3D from JSON node data."""
 
         pos = node_data["position"]
@@ -308,7 +317,7 @@ class Transform3D:
     @classmethod
     def from_translation_rpy(
         cls, translation: npt.NDArray, rpy: npt.NDArray
-    ) -> "Transform3D":
+    ) -> Transform3D:
         """Create Transform3D from translation and roll-pitch-yaw angles.
 
         Parameters
@@ -326,7 +335,7 @@ class Transform3D:
 
     # =================== OPERATIONS ===================
 
-    def __mul__(self, other: "Transform3D") -> "Transform3D":
+    def __mul__(self, other: Transform3D) -> Transform3D:
         """Combine two Transform3D objects (self * other)."""
 
         # Combine rotations
@@ -338,7 +347,7 @@ class Transform3D:
 
         return Transform3D(position=combined_pos, rotation_matrix=combined_rot)
 
-    def inverse(self) -> "Transform3D":
+    def inverse(self) -> Transform3D:
         """Compute the inverse of the Transform3D."""
 
         inv_rot = self._rotation.inv()
@@ -346,7 +355,7 @@ class Transform3D:
 
         return Transform3D(position=inv_pos, rotation_matrix=inv_rot.as_matrix())
 
-    def diff(self, other: "Transform3D") -> "Transform3D":
+    def diff(self, other: Transform3D) -> Transform3D:
         """Compute the difference between this Transform3D and another.
 
         Computes: result = inv(self) * other
@@ -358,11 +367,11 @@ class Transform3D:
     # =================== REBASE AND CONVERSIONS ===================
 
     @overload
-    def rebase(self, local_transform: "Transform3D") -> "Transform3D": ...
+    def rebase(self, local_transform: Transform3D) -> Transform3D: ...
     @overload
-    def rebase(self, local_transform: npt.NDArray) -> "Transform3D": ...
+    def rebase(self, local_transform: npt.NDArray) -> Transform3D: ...
 
-    def rebase(self, local_transform) -> "Transform3D":
+    def rebase(self, local_transform) -> Transform3D:
         """Rebase this Transform3D with a local transform.
 
         Computes: result = oM_self @ inv(oM_src) @ oM_dst
@@ -408,8 +417,7 @@ class Transform3D:
 
         if not HAS_VISER:
             raise ImportError(
-                "viser is required for this method. "
-                "Install it via: pip install viser"
+                "viser is required for this method. Install it via: pip install viser"
             )
         return ViserSE3.from_matrix(self.homogeneous)
 
@@ -424,7 +432,7 @@ class Transform3D:
         return np.concatenate([self.position, quat])
 
     @staticmethod
-    def identity() -> "Transform3D":
+    def identity() -> Transform3D:
         """Return an identity Transform3D."""
 
         return Transform3D(

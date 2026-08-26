@@ -4,10 +4,12 @@ Helper functions for URDF content processing.
 This module contains utility functions for URL replacement and content normalization
 in URDF files.
 """
+
 from __future__ import annotations
 
 import os
 import re
+
 
 def replace_package_url_in_content(
     content: str, package_dir: str, description_name: str | None = None
@@ -64,5 +66,6 @@ def replace_package_url_in_content(
     content = url_attr_pattern.sub(_replace_bare_attr, content)
 
     return content
+
 
 __all__ = ["replace_package_url_in_content"]

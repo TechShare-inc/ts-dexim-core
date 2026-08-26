@@ -1,4 +1,4 @@
-"""SkeletonReceiver — HandState subscription and glove-ID filtering."""
+"""SkeletonReceiver -- HandState subscription and glove-ID filtering."""
 
 from __future__ import annotations
 
@@ -16,18 +16,18 @@ class SkeletonReceiver:
     Args:
         subscriber: Object implementing ``read_latest_batch()``
             (TopicSubscriber[HandState] or a compatible mock).
-        handedness: ``"left"`` or ``"right"``.
+        side: ``"left"`` or ``"right"``.
         glove_id: Expected glove ID for filtering (hex str, int, or None).
     """
 
     def __init__(
         self,
         subscriber: Any,
-        handedness: str,
+        side: str,
         glove_id: str | int | None = None,
     ) -> None:
         self._subscriber = subscriber
-        self._handedness = handedness
+        self._side = side
         self._expected_glove_id = glove_id
         self._no_data_streak: int = 0
         self._last_data_age_sec: float | None = None
@@ -62,7 +62,7 @@ class SkeletonReceiver:
                 if self._expected_glove_id is None:
                     if not self._warning_logged:
                         logger.warning(
-                            f"[{self._handedness}] No glove_id configured; "
+                            f"[{self._side}] No glove_id configured; "
                             "using first HandState in batch."
                         )
                         self._warning_logged = True
@@ -77,7 +77,7 @@ class SkeletonReceiver:
                                 break
                         if result is None and not self._warning_logged:
                             logger.warning(
-                                f"[{self._handedness}] No HandState matched glove_id "
+                                f"[{self._side}] No HandState matched glove_id "
                                 f"0x{exp_id:X} ({exp_id}) in batch of {len(batch)}"
                             )
                             self._warning_logged = True
@@ -87,13 +87,13 @@ class SkeletonReceiver:
             self._last_data_age_sec = data_age
             self._no_data_streak = 0
             logger.debug(
-                f"[{self._handedness}] skeleton data_age={data_age * 1000:.1f}ms"
+                f"[{self._side}] skeleton data_age={data_age * 1000:.1f}ms"
             )
         else:
             self._no_data_streak += 1
             if self._no_data_streak in (5, 10, 30, 60):
                 logger.warning(
-                    f"[{self._handedness}] No skeleton data for "
+                    f"[{self._side}] No skeleton data for "
                     f"{self._no_data_streak} consecutive frames"
                 )
 
@@ -128,7 +128,7 @@ class SkeletonReceiver:
 
         return self._subscriber.wait_for_sensor(
             sensor_type="skeleton",
-            handedness=self._handedness,
+            side=self._side,
             glove_id=self._expected_glove_id,
             timeout_sec=timeout_sec,
             poll_interval_sec=poll_interval_sec,
@@ -152,7 +152,7 @@ class SkeletonReceiver:
             return int(self._expected_glove_id)  # type: ignore[arg-type]
         except (ValueError, TypeError) as exc:
             logger.error(
-                f"[{self._handedness}] Invalid glove_id "
+                f"[{self._side}] Invalid glove_id "
                 f"'{self._expected_glove_id}': {exc}"
             )
             return None
