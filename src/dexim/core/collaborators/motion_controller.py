@@ -173,16 +173,21 @@ class MotionController:
             logger.warning("Cannot move to safe position: interface is not connected")
             return False
 
-        try:
-            current = self._interface.read().q
-        except Exception as exc:
-            logger.warning(f"Cannot read current position: {exc}")
-            self.send(safe_position)
-            return True
+        if self._current_joint_positions is not None:
+            current = self._current_joint_positions.copy()
+        else:
+            try:
+                current = self._interface.read().q
+            except Exception as exc:
+                logger.warning(f"Cannot read current position: {exc}")
+                self.send(safe_position)
+                return True
 
         delta = safe_position - current
         max_joint_delta = np.max(np.abs(delta))
         if max_joint_delta < 1e-4:
+            self._current_joint_positions = current.copy()
+            logger.success("Robot is already at the safe position")
             return True
 
         vel = (
@@ -190,10 +195,24 @@ class MotionController:
             or self._safe_position_max_velocity_rad_s
             or self._max_joint_velocity_rad_s
         )
-        max_delta_per_step = vel * self.dt
-        num_steps = min(
-            int(np.ceil(max_joint_delta / max_delta_per_step)) + 5,
-            int(timeout_sec / self.dt),
+        if vel <= 0:
+            raise ValueError("Safe-position velocity must be greater than zero")
+
+        # smootherstep has a maximum derivative of 1.875.  Account for that
+        # peak when choosing the trajectory duration so the configured value
+        # is a true velocity ceiling rather than only an average velocity.
+        smootherstep_peak_slope = 1.875
+        required_duration_sec = (
+            smootherstep_peak_slope * max_joint_delta / vel
+        )
+        num_steps = max(1, int(np.ceil(required_duration_sec / self.dt)))
+
+        # A low safe-position velocity can legitimately require more than the
+        # legacy five-second timeout.  Extend only this movement's deadline;
+        # never compress the trajectory and violate the requested speed.
+        movement_timeout_sec = max(
+            timeout_sec,
+            num_steps * self.dt + max(1.0, 2.0 * self.dt),
         )
 
         logger.info(
@@ -202,7 +221,7 @@ class MotionController:
 
         start = time.time()
         for i in range(num_steps):
-            if time.time() - start > timeout_sec:
+            if time.time() - start > movement_timeout_sec:
                 logger.warning("Safe-position movement timed out")
                 return False
             t = (i + 1) / num_steps
