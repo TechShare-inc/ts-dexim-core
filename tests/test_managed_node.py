@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import Mock
 
 import pytest
@@ -21,7 +22,7 @@ class ManagedNodeHarness(ManagedNode):
         self._countdown_duration = 0.0
         self.is_publishing = False
         self.start_count = 0
-        self.report_status = Mock()  # type: ignore[method-assign]
+        self.reported_statuses: list[tuple[str, Any]] = []
 
     def on_standby(self) -> None: ...
 
@@ -40,6 +41,9 @@ class ManagedNodeHarness(ManagedNode):
 
     def _main_loop_iteration(self) -> None: ...
 
+    def report_status(self, status: str, info: Any = None) -> None:
+        self.reported_statuses.append((status, info))
+
 
 @pytest.mark.parametrize(
     ("countdown_active", "teleop_active"),
@@ -56,7 +60,7 @@ def test_duplicate_start_is_ignored(
     node._handle_control_message()
 
     assert node.start_count == 0
-    node.report_status.assert_not_called()
+    assert node.reported_statuses == []
 
 
 def test_start_from_idle_runs_start_hook_once() -> None:

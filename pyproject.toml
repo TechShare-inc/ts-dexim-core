@@ -64,5 +64,5 @@ dexim-core = { path = ".", editable = true, extras = ["dev"] }
 [tool.pixi.tasks]
 check-import = "python -c \"import pinocchio; import dexim.core; print('pinocchio + dexim.core import ok')\""
 test = "pytest"
-lint = "ruff check tests src/dexim/core/collaborators/__init__.py src/dexim/core/collaborators/ergonomics_receiver.py src/dexim/core/collaborators/motion_controller.py src/dexim/core/collaborators/protocols.py src/dexim/core/config/__init__.py src/dexim/core/config/base.py src/dexim/core/messages/__init__.py src/dexim/core/messages/types.py src/dexim/core/model/__init__.py src/dexim/core/nodes/managed.py"
-format-check = "ruff format --check tests src/dexim/core/collaborators/__init__.py src/dexim/core/collaborators/ergonomics_receiver.py src/dexim/core/collaborators/motion_controller.py src/dexim/core/collaborators/protocols.py src/dexim/core/config/__init__.py src/dexim/core/config/base.py src/dexim/core/messages/__init__.py src/dexim/core/messages/types.py src/dexim/core/model/__init__.py src/dexim/core/nodes/managed.py"
+lint = "ruff check src tests"
+format-check = "ruff format --check src tests"

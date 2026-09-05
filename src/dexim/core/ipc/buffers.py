@@ -26,6 +26,7 @@ import uuid
 from multiprocessing.shared_memory import SharedMemory
 
 import numpy as np
+
 from dexim.core.ipc.seqlock import (
     seqlock_begin_write,
     seqlock_end_write,

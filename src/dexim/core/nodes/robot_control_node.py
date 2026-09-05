@@ -38,9 +38,10 @@ from abc import ABC, abstractmethod
 from typing import Any, Protocol, runtime_checkable
 
 import numpy as np
+from loguru import logger
+
 from dexim.core.nodes.managed import ManagedNode
 from dexim.core.nodes.utils import RateLimiter, smootherstep
-from loguru import logger
 
 
 @runtime_checkable

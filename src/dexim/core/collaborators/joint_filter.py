@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import numpy as np
+from loguru import logger
+
 from dexim.core.config import FilterConfig
 from dexim.core.utility import (
     ExponentialMovingFilter,
     OneEuroFilter,
     WeightedMovingFilter,
 )
-from loguru import logger
 
 
 class JointFilter:

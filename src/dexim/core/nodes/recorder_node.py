@@ -42,13 +42,14 @@ from collections import defaultdict
 from typing import Any
 
 import zmq
+from loguru import logger
+
 from dexim.core.messages import (
     CTRL_PUB_ENDPOINT,
     STATUS_PULL_ENDPOINT,
     unpack_data_message,
 )
 from dexim.core.nodes.managed import ManagedNode
-from loguru import logger
 
 
 class RecorderNode(ManagedNode):

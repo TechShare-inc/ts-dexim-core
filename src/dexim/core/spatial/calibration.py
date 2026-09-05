@@ -114,7 +114,9 @@ def calibrate_world(
         measured_points, reference_points, calc_scale=False
     )
 
-    logger.info("[OK] Transformation matrix calculated using ts_spatial.rigid_transform")
+    logger.info(
+        "[OK] Transformation matrix calculated using ts_spatial.rigid_transform"
+    )
     logger.debug(f"Rotation matrix determinant: {np.linalg.det(R_matrix):.6f}")
     logger.debug(f"Translation vector: {t_vector.flatten()}")
 
