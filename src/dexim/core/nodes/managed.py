@@ -17,6 +17,7 @@ import time
 from typing import Any
 
 import zmq
+
 from dexim.core.messages import (
     CTRL_DISCARD_REC,
     CTRL_PAUSE,
@@ -354,6 +355,11 @@ class ManagedNode(abc.ABC):
 
         # Teleoperation control
         if cmd == CTRL_START:
+            # Ignore duplicate START commands while the node is already
+            # starting or running. This prevents repeated reference capture.
+            if self._countdown_active or self._teleop_active:
+                return
+
             # START: Begin teleoperation, capture reference pose.
             # Call on_start() BEFORE any state change to ensure reference
             # poses are captured while the pipeline is still idle.

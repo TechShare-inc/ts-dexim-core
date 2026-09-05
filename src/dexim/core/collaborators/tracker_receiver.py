@@ -5,8 +5,9 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from dexim.core.messages import RigidPose
 from loguru import logger
+
+from dexim.core.messages import RigidPose
 
 # Reject data older than this to avoid stale buffered poses.
 # At 60 Hz a frame is produced every ~17 ms, so 100 ms ~= 6 dropped frames.

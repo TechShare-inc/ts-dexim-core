@@ -22,8 +22,25 @@ dependencies = [
     "nlopt>=2.7.0",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.11.0",
+]
+
 [tool.pyright]
 stubPath = "typings"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+ignore = ["E501"]
 
 [tool.uv.build-backend]
 module-name = "dexim.core"
@@ -42,7 +59,10 @@ pinocchio = ">=3.7.0"
 
 [tool.pixi.pypi-dependencies]
 # Install current package in editable mode inside the Pixi environment.
-dexim-core = { path = ".", editable = true }
+dexim-core = { path = ".", editable = true, extras = ["dev"] }
 
 [tool.pixi.tasks]
 check-import = "python -c \"import pinocchio; import dexim.core; print('pinocchio + dexim.core import ok')\""
+test = "pytest"
+lint = "ruff check src tests"
+format-check = "ruff format --check src tests"

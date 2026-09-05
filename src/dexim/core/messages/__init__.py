@@ -8,8 +8,10 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 import msgpack
+
 from dexim.core.messages.status_info import StatusInfo
 from dexim.core.messages.types import (
+    ErgonomicsState,
     FrameObservation,
     HandState,
     RigidPose,
@@ -63,6 +65,9 @@ class TopicBuilder:
             if side is not None:
                 return f"observation/{device_id}/hand_state/{side}".encode()
             return f"observation/{device_id}/hand_state".encode()
+
+        def ergonomics_state(self, device_id: str) -> bytes:
+            return f"observation/{device_id}/ergonomics_state".encode()
 
         def rigid_pose(self, device_id: str, tracker_type: str | None = None) -> bytes:
             if tracker_type is not None:
@@ -223,6 +228,7 @@ __all__ = [
     "StatusInfo",
     # Message types
     "FrameObservation",
+    "ErgonomicsState",
     "HandState",
     "RigidPose",
     "SkeletonJoint",

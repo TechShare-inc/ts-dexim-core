@@ -48,7 +48,8 @@ class WaitableSubscriberProtocol(Protocol):
         """Block until sensor data becomes available.
 
         Args:
-            sensor_type: Type of sensor to wait for (e.g. ``"skeleton"``).
+            sensor_type: Type of sensor to wait for, such as ``"skeleton"``
+                or ``"ergonomics"``.
             side: ``"left"`` or ``"right"``.
             glove_id: Expected glove ID, or None.
             timeout_sec: Maximum wait time.

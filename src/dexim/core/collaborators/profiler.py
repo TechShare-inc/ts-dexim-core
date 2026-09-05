@@ -6,8 +6,9 @@ import contextlib
 import time
 from collections.abc import Generator
 
-from dexim.core.nodes.utils import RateLimiter
 from loguru import logger
+
+from dexim.core.nodes.utils import RateLimiter
 
 
 class PipelineProfiler:

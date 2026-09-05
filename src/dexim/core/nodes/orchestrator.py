@@ -57,11 +57,10 @@ import sys
 import time
 import warnings
 from pathlib import Path
-import sys
-import time
-from pathlib import Path
 
 import zmq
+from loguru import logger
+
 from dexim.core.messages import (
     CTRL_PAUSE,
     CTRL_PUB_ENDPOINT,
@@ -74,7 +73,6 @@ from dexim.core.messages import (
     STATUS_PULL_ENDPOINT,
     TOPIC_CTRL,
 )
-from loguru import logger
 
 
 class NodeStatus:

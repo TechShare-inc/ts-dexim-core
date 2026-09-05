@@ -38,8 +38,9 @@ import time
 from typing import Any, Generic, TypeVar
 
 import zmq
-from dexim.core.messages import unpack_data_message
 from loguru import logger
+
+from dexim.core.messages import unpack_data_message
 
 T = TypeVar("T")
 

@@ -36,6 +36,8 @@ from .base import (
     InspireRealConfig,
     InterfaceConfig,
     MediaPipeConfig,
+    ModbusRTUProtocolConfig,
+    ModbusTCPProtocolConfig,
     NovaConfig,
     # Nova configs
     NovaRealConfig,
@@ -66,6 +68,8 @@ __all__ = [
     "SimInterfaceConfig",
     "TCPIPProtocolConfig",
     "RS485ProtocolConfig",
+    "ModbusTCPProtocolConfig",
+    "ModbusRTUProtocolConfig",
     "BaseOffsetConfig",
     # Nova configs
     "NovaRealConfig",

@@ -5,9 +5,15 @@ from __future__ import annotations
 import time
 
 import numpy as np
+from loguru import logger
+
 from dexim.core.nodes.utils import RateLimiter, smootherstep
 from dexim.core.robot_interface import JointCommand, RobotInterface
-from loguru import logger
+
+_SMOOTHERSTEP_PEAK_SLOPE = 1.875
+_SAFE_POSITION_TOLERANCE_RAD = 0.02
+_SAFE_POSITION_SETTLE_TIMEOUT_SEC = 5.0
+_SAFE_POSITION_SETTLE_SAMPLES = 3
 
 
 class MotionController:
@@ -162,7 +168,9 @@ class MotionController:
         Args:
             safe_position: Target joint configuration.
             max_velocity_rad_s: Override for velocity limit.
-            timeout_sec: Maximum movement duration.
+            timeout_sec: Minimum movement time budget. Long movements extend
+                beyond this value when necessary to preserve the velocity
+                ceiling.
 
         Returns:
             True if target reached, False on timeout or when interface is
@@ -177,47 +185,85 @@ class MotionController:
             current = self._interface.read().q
         except Exception as exc:
             logger.warning(f"Cannot read current position: {exc}")
-            self.send(safe_position)
-            return True
+            return False
 
         delta = safe_position - current
         max_joint_delta = np.max(np.abs(delta))
         if max_joint_delta < 1e-4:
-            return True
+            return self._wait_until_at_safe_position(safe_position)
 
-        vel = (
-            max_velocity_rad_s
-            or self._safe_position_max_velocity_rad_s
-            or self._max_joint_velocity_rad_s
-        )
-        max_delta_per_step = vel * self.dt
-        num_steps = min(
-            int(np.ceil(max_joint_delta / max_delta_per_step)) + 5,
-            int(timeout_sec / self.dt),
+        if max_velocity_rad_s is not None:
+            vel = max_velocity_rad_s
+        elif self._safe_position_max_velocity_rad_s is not None:
+            vel = self._safe_position_max_velocity_rad_s
+        else:
+            vel = self._max_joint_velocity_rad_s
+        if vel <= 0:
+            raise ValueError("safe-position velocity limit must be greater than zero")
+
+        # smootherstep has a peak derivative of 1.875 at t=0.5.  Size the
+        # trajectory for that peak rather than its average speed so every
+        # commanded step remains within the configured velocity ceiling.
+        required_duration_sec = _SMOOTHERSTEP_PEAK_SLOPE * max_joint_delta / vel
+        num_steps = max(1, int(np.ceil(required_duration_sec / self.dt)))
+        movement_timeout_sec = max(
+            timeout_sec,
+            num_steps * self.dt + max(1.0, 2 * self.dt),
         )
 
         logger.info(
             f"Moving to safe position: {num_steps} steps (~{num_steps * self.dt:.2f}s)"
         )
 
-        start = time.time()
+        start = time.monotonic()
+        next_command_time = start + self.dt
         for i in range(num_steps):
-            if time.time() - start > timeout_sec:
+            self._sleep_until(next_command_time)
+            if time.monotonic() - start > movement_timeout_sec:
                 logger.warning("Safe-position movement timed out")
                 return False
             t = (i + 1) / num_steps
             interp = current + smootherstep(t) * delta
             self.send(interp)
-            if i < num_steps - 1:
-                self.rate_limiter.sleep()
+            next_command_time = time.monotonic() + self.dt
 
         # Explicit final send to guarantee the exact safe position is reached,
         # even if floating-point or timing issues caused the last interpolated
         # step to be imprecise.
         self.send(safe_position)
-        # Update the cached current position so that subsequent velocity-
-        # limited teleop commands start from the safe position rather than
-        # from the stale value captured during initialize().
-        self._current_joint_positions = safe_position.copy()
-        logger.success(f"Reached safe position in {time.time() - start:.2f}s")
+        if not self._wait_until_at_safe_position(safe_position):
+            logger.warning("Safe-position verification timed out")
+            return False
+
+        logger.success(f"Reached safe position in {time.monotonic() - start:.2f}s")
         return True
+
+    @staticmethod
+    def _sleep_until(deadline: float) -> None:
+        """Wait until a monotonic deadline without reusing control-loop state."""
+        while (remaining := deadline - time.monotonic()) > 0:
+            time.sleep(remaining)
+
+    def _wait_until_at_safe_position(self, safe_position: np.ndarray) -> bool:
+        """Require consecutive feedback samples within the target tolerance."""
+        deadline = time.monotonic() + _SAFE_POSITION_SETTLE_TIMEOUT_SEC
+        settled_samples = 0
+
+        while time.monotonic() <= deadline:
+            state = self.read_state()
+            if state is not None and np.allclose(
+                state.q,
+                safe_position,
+                rtol=0.0,
+                atol=_SAFE_POSITION_TOLERANCE_RAD,
+            ):
+                settled_samples += 1
+                if settled_samples >= _SAFE_POSITION_SETTLE_SAMPLES:
+                    self._current_joint_positions = state.q.copy()
+                    return True
+            else:
+                settled_samples = 0
+
+            time.sleep(min(self.dt, 0.05))
+
+        return False

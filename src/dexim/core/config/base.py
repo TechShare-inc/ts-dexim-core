@@ -114,6 +114,32 @@ class RS485ProtocolConfig:
 
 
 @dataclass
+class ModbusTCPProtocolConfig:
+    """Modbus TCP transport settings.
+
+    Attributes:
+        ip: Device IP address.
+        port: Modbus TCP port.
+    """
+
+    ip: str = "192.168.1.100"
+    port: int = 502
+
+
+@dataclass
+class ModbusRTUProtocolConfig:
+    """Modbus RTU transport settings.
+
+    Attributes:
+        port: Serial port path.
+        baud: Serial baud rate.
+    """
+
+    port: str = "/dev/ttyUSB0"
+    baud: int = 115200
+
+
+@dataclass
 class FilterConfig:
     """Configuration for joint-angle smoothing filters.
 
@@ -272,9 +298,7 @@ class NovaConfig:
         """Validate configuration."""
 
         if self.side not in ["left", "right"]:
-            raise ValueError(
-                f"Invalid side: {self.side}. Must be 'left' or 'right'"
-            )
+            raise ValueError(f"Invalid side: {self.side}. Must be 'left' or 'right'")
 
         if len(self.home_joints_deg) != 6:
             raise ValueError(

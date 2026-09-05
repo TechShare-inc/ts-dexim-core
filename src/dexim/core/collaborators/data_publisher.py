@@ -7,9 +7,10 @@ from typing import Any
 
 import numpy as np
 import zmq
+from loguru import logger
+
 from dexim.core.messages import TopicBuilder, pack_data_message
 from dexim.core.robot_interface import JointState
-from loguru import logger
 
 
 class DataPlanePublisher:
