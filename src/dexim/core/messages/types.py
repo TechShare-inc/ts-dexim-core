@@ -14,6 +14,7 @@ Message vocabulary:
     JointCommand  -- controller -> robot arm/hand (desired configuration)
     JointState    -- robot -> system (observed joint configuration)
     HandState     -- input device -> hand controller (observed hand skeleton)
+    ErgonomicsState -- input device -> controller (observed joint-angle data)
     RigidPose     -- input device -> arm controller (observed 6-DOF rigid body pose)
 """
 
@@ -71,6 +72,42 @@ class SkeletonJoint:
             position=(float(pos[0]), float(pos[1]), float(pos[2])),
             rotation=(float(rot[0]), float(rot[1]), float(rot[2]), float(rot[3])),
             scale=(float(sc[0]), float(sc[1]), float(sc[2])),
+        )
+
+
+@dataclass
+class ErgonomicsState:
+    """Ergonomics joint-angle data for one tracked hand.
+
+    Attributes:
+        glove_id: Source glove identifier.
+        side: Hand side, normally ``"left"`` or ``"right"``.
+        timestamp: Capture time in seconds since the Unix epoch.
+        values: Ordered ergonomics joint-angle values from the input device.
+    """
+
+    glove_id: int
+    side: str
+    timestamp: float
+    values: list[float]
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to a msgpack-compatible dictionary."""
+        return {
+            "glove_id": self.glove_id,
+            "side": self.side,
+            "timestamp": self.timestamp,
+            "values": list(self.values),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ErgonomicsState:
+        """Deserialize an ergonomics state from a decoded dictionary."""
+        return cls(
+            glove_id=int(data["glove_id"]),
+            side=str(data["side"]),
+            timestamp=float(data["timestamp"]),
+            values=[float(value) for value in data["values"]],
         )
 
 
@@ -269,6 +306,7 @@ class RigidPose:
             ImportError: If dexim.core.spatial is not available.
         """
         import numpy as np
+
         from dexim.core.spatial import Transform3D
 
         return Transform3D(
@@ -333,6 +371,7 @@ class FrameObservation:
 
 
 __all__ = [
+    "ErgonomicsState",
     "FrameObservation",
     "HandState",
     "RigidPose",

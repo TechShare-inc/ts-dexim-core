@@ -8,6 +8,7 @@ composed freely by any robot package (arm or hand):
         DataPlanePublisher,
         PipelineProfiler,
         JointFilter,
+        ErgonomicsReceiver,
         SkeletonReceiver,
         TrackerReceiver,
     )
@@ -25,6 +26,7 @@ WaitableSubscriberProtocol
 from __future__ import annotations
 
 from dexim.core.collaborators.data_publisher import DataPlanePublisher
+from dexim.core.collaborators.ergonomics_receiver import ErgonomicsReceiver
 from dexim.core.collaborators.joint_filter import JointFilter
 from dexim.core.collaborators.motion_controller import MotionController
 from dexim.core.collaborators.profiler import PipelineProfiler
@@ -41,6 +43,7 @@ __all__ = [
     "DataPlanePublisher",
     "PipelineProfiler",
     "JointFilter",
+    "ErgonomicsReceiver",
     "SkeletonReceiver",
     "TrackerReceiver",
     # Protocols
