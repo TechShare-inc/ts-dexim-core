@@ -17,6 +17,8 @@ Example:
 
 from __future__ import annotations
 
+from typing import Any
+
 from dexim.core.model.base_hand_model import BaseHandModel
 from dexim.core.model.helpers import replace_package_url_in_content
 from dexim.core.model.utils import load_urdf_model, load_urdf_models
@@ -40,7 +42,7 @@ _LAZY_OPTIMIZER_EXPORTS = {
 }
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> Any:
     """Import optimizer dependencies only when explicitly requested."""
     if name not in _LAZY_OPTIMIZER_EXPORTS:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
