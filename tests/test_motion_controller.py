@@ -26,11 +26,20 @@ class FakeInterface:
         readings: list[JointState | Exception],
         *,
         connected: bool = True,
+        clock: FakeClock | None = None,
     ) -> None:
         self.readings = readings
         self.connected = connected
         self.commands: list[np.ndarray] = []
+        self.command_times: list[float] = []
         self.read_count = 0
+        self.clock = clock
+
+    def connect(self) -> None:
+        self.connected = True
+
+    def disconnect(self) -> None:
+        self.connected = False
 
     def is_connected(self) -> bool:
         return self.connected
@@ -45,12 +54,55 @@ class FakeInterface:
     def write(self, command: JointCommand) -> None:
         assert command.q is not None
         self.commands.append(command.q.copy())
+        if self.clock is not None:
+            self.command_times.append(self.clock.monotonic())
+
+    def time(self) -> float:
+        return 0.0
+
+    def estop(self) -> bool:
+        return False
+
+    def num_joint_configurations(self) -> int:
+        return 1
+
+    def joint_names(self) -> list[str]:
+        return ["joint_0"]
+
+    def num_actuated_configurations(self) -> int:
+        return 1
+
+    def actuated_joint_names(self) -> list[str]:
+        return ["joint_0"]
+
+    def num_full_configurations(self) -> int:
+        return 1
+
+    def full_joint_names(self) -> list[str]:
+        return ["joint_0"]
+
+
+class FakeClock:
+    def __init__(self) -> None:
+        self.now = 0.0
+
+    def monotonic(self) -> float:
+        return self.now
+
+    def sleep(self, seconds: float) -> None:
+        self.now += seconds
+
+
+@pytest.fixture(autouse=True)
+def fake_clock(monkeypatch: pytest.MonkeyPatch) -> FakeClock:
+    clock = FakeClock()
+    monkeypatch.setattr(motion_module.time, "monotonic", clock.monotonic)
+    monkeypatch.setattr(motion_module.time, "sleep", clock.sleep)
+    return clock
 
 
 def controller(interface: FakeInterface) -> MotionController:
-    result = MotionController(interface, rate_hz=10.0)  # type: ignore[arg-type]
-    result.rate_limiter.sleep = lambda: {}  # type: ignore[method-assign]
-    return result
+    return MotionController(interface, rate_hz=10.0)
 
 
 def test_move_to_safe_rejects_disconnected_interface() -> None:
@@ -68,29 +120,27 @@ def test_move_to_safe_fails_closed_when_initial_read_fails() -> None:
 
 
 def test_move_to_safe_enforces_peak_velocity_and_verifies_feedback(
-    monkeypatch: pytest.MonkeyPatch,
+    fake_clock: FakeClock,
 ) -> None:
     target = np.array([1.0])
     interface = FakeInterface(
-        [
-            joint_state([0.0]),
-            joint_state(target),
-            joint_state(target),
-            joint_state(target),
-        ]
+        [joint_state([0.0]), *(joint_state(target) for _ in range(3))],
+        clock=fake_clock,
     )
     motion = controller(interface)
-    monkeypatch.setattr(motion_module.time, "sleep", lambda _seconds: None)
+    fake_clock.now = 100.0  # Simulate a long-idle controller before this move.
 
     assert motion.move_to_safe(target, max_velocity_rad_s=0.5)
     positions = np.concatenate(([0.0], [q[0] for q in interface.commands]))
-    assert np.max(np.abs(np.diff(positions))) <= 0.5 * motion.dt + 1e-12
+    position_steps = np.diff(positions)
+    command_intervals = np.diff([100.0, *interface.command_times])
+    moving_intervals = command_intervals[np.abs(position_steps) > 1e-12]
+    assert np.max(np.abs(position_steps)) <= 0.5 * motion.dt + 1e-12
+    assert np.min(moving_intervals) >= motion.dt - 1e-12
     assert np.array_equal(motion._current_joint_positions, target)
 
 
-def test_safe_position_verification_requires_consecutive_samples(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_safe_position_verification_requires_consecutive_samples() -> None:
     target = np.array([1.0])
     interface = FakeInterface(
         [
@@ -103,8 +153,6 @@ def test_safe_position_verification_requires_consecutive_samples(
             joint_state(target),
         ]
     )
-    monkeypatch.setattr(motion_module.time, "sleep", lambda _seconds: None)
-
     assert controller(interface).move_to_safe(target, max_velocity_rad_s=10.0)
     assert interface.read_count == 7
 
@@ -115,7 +163,6 @@ def test_safe_position_verification_timeout_returns_false(
     target = np.array([1.0])
     interface = FakeInterface([joint_state([0.0]), joint_state([0.5])])
     monkeypatch.setattr(motion_module, "_SAFE_POSITION_SETTLE_TIMEOUT_SEC", 0.0)
-    monkeypatch.setattr(motion_module.time, "sleep", lambda _seconds: None)
 
     assert not controller(interface).move_to_safe(target, max_velocity_rad_s=10.0)
 

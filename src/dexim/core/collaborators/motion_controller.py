@@ -215,16 +215,17 @@ class MotionController:
             f"Moving to safe position: {num_steps} steps (~{num_steps * self.dt:.2f}s)"
         )
 
-        start = time.time()
+        start = time.monotonic()
+        next_command_time = start + self.dt
         for i in range(num_steps):
-            if time.time() - start > movement_timeout_sec:
+            self._sleep_until(next_command_time)
+            if time.monotonic() - start > movement_timeout_sec:
                 logger.warning("Safe-position movement timed out")
                 return False
             t = (i + 1) / num_steps
             interp = current + smootherstep(t) * delta
             self.send(interp)
-            if i < num_steps - 1:
-                self.rate_limiter.sleep()
+            next_command_time = time.monotonic() + self.dt
 
         # Explicit final send to guarantee the exact safe position is reached,
         # even if floating-point or timing issues caused the last interpolated
@@ -234,8 +235,14 @@ class MotionController:
             logger.warning("Safe-position verification timed out")
             return False
 
-        logger.success(f"Reached safe position in {time.time() - start:.2f}s")
+        logger.success(f"Reached safe position in {time.monotonic() - start:.2f}s")
         return True
+
+    @staticmethod
+    def _sleep_until(deadline: float) -> None:
+        """Wait until a monotonic deadline without reusing control-loop state."""
+        while (remaining := deadline - time.monotonic()) > 0:
+            time.sleep(remaining)
 
     def _wait_until_at_safe_position(self, safe_position: np.ndarray) -> bool:
         """Require consecutive feedback samples within the target tolerance."""
