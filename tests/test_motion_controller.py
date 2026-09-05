@@ -51,9 +51,9 @@ class FakeInterface:
             raise reading
         return reading
 
-    def write(self, command: JointCommand) -> None:
-        assert command.q is not None
-        self.commands.append(command.q.copy())
+    def write(self, cmd: JointCommand) -> None:
+        assert cmd.q is not None
+        self.commands.append(cmd.q.copy())
         if self.clock is not None:
             self.command_times.append(self.clock.monotonic())
 
@@ -137,7 +137,9 @@ def test_move_to_safe_enforces_peak_velocity_and_verifies_feedback(
     moving_intervals = command_intervals[np.abs(position_steps) > 1e-12]
     assert np.max(np.abs(position_steps)) <= 0.5 * motion.dt + 1e-12
     assert np.min(moving_intervals) >= motion.dt - 1e-12
-    assert np.array_equal(motion._current_joint_positions, target)
+    cached_position = motion._current_joint_positions
+    assert cached_position is not None
+    assert np.array_equal(cached_position, target)
 
 
 def test_safe_position_verification_requires_consecutive_samples() -> None:

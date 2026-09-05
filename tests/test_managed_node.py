@@ -12,11 +12,12 @@ from dexim.core.nodes.managed import ManagedNode
 class ManagedNodeHarness(ManagedNode):
     def __init__(self) -> None:
         self.node_id = "test"
-        self._sub_control = Mock()
-        self._sub_control.recv_multipart.return_value = [
+        control_socket = Mock()
+        control_socket.recv_multipart.return_value = [
             TOPIC_CTRL,
             CTRL_START.encode(),
         ]
+        self._sub_control = control_socket
         self._countdown_active = False
         self._teleop_active = False
         self._countdown_duration = 0.0

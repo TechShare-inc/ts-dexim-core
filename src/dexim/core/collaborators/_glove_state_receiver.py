@@ -89,8 +89,7 @@ class _GloveStateReceiver(Generic[_StateT]):
             self._last_data_age_sec = data_age
             self._no_data_streak = 0
             logger.debug(
-                f"[{self._side}] {self._sensor_type} "
-                f"data_age={data_age * 1000:.1f}ms"
+                f"[{self._side}] {self._sensor_type} data_age={data_age * 1000:.1f}ms"
             )
         else:
             self._no_data_streak += 1
