@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "dexim-core"
-version = "0.1.0"
+version = "1.0.0"
 description = "DexImitate core framework modules consolidated into one package"
 readme = "README.md"
 authors = [
