@@ -78,3 +78,12 @@ class JointFilter:
         if self._filter is None:
             return q
         return self._filter.filter(q)
+
+    def reset(self) -> None:
+        """Clear samples retained by the configured smoothing filter.
+
+        A new teleoperation control epoch must not inherit filter history from
+        the preceding run. Disabled filtering remains a no-op.
+        """
+        if self._filter is not None:
+            self._filter.reset()

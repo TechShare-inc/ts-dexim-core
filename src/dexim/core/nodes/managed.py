@@ -137,8 +137,13 @@ class ManagedNode(abc.ABC):
         """
 
     @abc.abstractmethod
-    def on_start(self) -> None:
-        """Called when START command is received (node lifecycle)."""
+    def on_start(self) -> bool | None:
+        """Prepare for START.
+
+        Return ``False`` when runtime prerequisites are unavailable. The
+        managed lifecycle then remains inactive; ``None`` preserves the
+        historical successful-hook behavior for existing nodes.
+        """
 
     @abc.abstractmethod
     def on_pause(self) -> None:
@@ -363,7 +368,12 @@ class ManagedNode(abc.ABC):
             # START: Begin teleoperation, capture reference pose.
             # Call on_start() BEFORE any state change to ensure reference
             # poses are captured while the pipeline is still idle.
-            self.on_start()
+            start_accepted = self.on_start()
+            if start_accepted is False:
+                self.is_publishing = False
+                self.report_status(STATUS_PAUSED, {"start_rejected": True})
+                print(f"{self.node_id} start rejected -- prerequisites unavailable")
+                return
             if self._countdown_duration > 0.0:
                 # Start countdown -- _pre_loop_iteration will transition
                 # to RUNNING when it expires.

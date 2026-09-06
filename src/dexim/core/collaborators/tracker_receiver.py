@@ -125,7 +125,11 @@ class TrackerReceiver:
     # Reference capture (called on START)
     # ------------------------------------------------------------------
 
-    def capture_reference(self, attempts: int = 20) -> bool:
+    def capture_reference(
+        self,
+        attempts: int = 20,
+        required_consecutive: int = 1,
+    ) -> bool:
         """Poll until a fresh pose is received and store it as reference.
 
         Called once on node START so that relative motion can be computed
@@ -134,10 +138,19 @@ class TrackerReceiver:
 
         Args:
             attempts: Maximum number of read attempts.
+            required_consecutive: Distinct fresh samples required. Missing or
+                stale samples reset the consecutive-sample count.
 
         Returns:
             True if a reference pose was captured, False on failure.
         """
+        if required_consecutive < 1:
+            raise ValueError("required_consecutive must be at least 1")
+        if attempts < required_consecutive:
+            raise ValueError("attempts must cover required_consecutive samples")
+
+        consecutive = 0
+        previous_timestamp: float | None = None
         for attempt in range(attempts):
             try:
                 pose: RigidPose | None = self._subscriber.read_latest()
@@ -146,6 +159,8 @@ class TrackerReceiver:
                     f"[{self._tracker_type}] Reference capture attempt "
                     f"{attempt + 1}/{attempts} failed: {exc}"
                 )
+                consecutive = 0
+                previous_timestamp = None
                 time.sleep(0.05)
                 continue
 
@@ -154,6 +169,8 @@ class TrackerReceiver:
                     f"[{self._tracker_type}] Reference capture attempt "
                     f"{attempt + 1}/{attempts}: no fresh data, retrying\u2026"
                 )
+                consecutive = 0
+                previous_timestamp = None
                 time.sleep(0.05)
                 continue
 
@@ -165,11 +182,31 @@ class TrackerReceiver:
                         f"[{self._tracker_type}] Attempt {attempt + 1}: "
                         f"skipping stale data (age={age * 1000:.1f}ms)"
                     )
+                    consecutive = 0
+                    previous_timestamp = None
                     continue
+
+                if (
+                    previous_timestamp is not None
+                    and pose.timestamp <= previous_timestamp
+                ):
+                    logger.debug(
+                        f"[{self._tracker_type}] Attempt {attempt + 1}: "
+                        "waiting for a newer tracker sample"
+                    )
+                    time.sleep(0.05)
+                    continue
+                previous_timestamp = pose.timestamp
+
+            consecutive += 1
+            if consecutive < required_consecutive:
+                time.sleep(0.05)
+                continue
 
             self._reference_pose = pose
             logger.info(
                 f"[{self._tracker_type}] Reference pose captured "
+                f"after {consecutive} consecutive fresh samples "
                 f"(attempt {attempt + 1})"
             )
             return True
@@ -179,6 +216,10 @@ class TrackerReceiver:
             f"{attempts} attempts"
         )
         return False
+
+    def clear_reference(self) -> None:
+        """Invalidate the reference captured for the preceding control epoch."""
+        self._reference_pose = None
 
     # ------------------------------------------------------------------
     # Drain / close
