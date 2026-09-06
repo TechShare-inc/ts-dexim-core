@@ -180,6 +180,10 @@ class TrackerReceiver:
         )
         return False
 
+    def clear_reference(self) -> None:
+        """Invalidate the reference captured for the preceding control epoch."""
+        self._reference_pose = None
+
     # ------------------------------------------------------------------
     # Drain / close
     # ------------------------------------------------------------------
