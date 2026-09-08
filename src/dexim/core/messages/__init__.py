@@ -25,6 +25,8 @@ STATUS_PULL_ENDPOINT = "tcp://localhost:5551"
 # Control topic and commands
 TOPIC_CTRL = b"control"
 CTRL_START = "START"
+CTRL_PREPARE = "PREPARE"
+CTRL_ACTIVATE = "ACTIVATE"
 CTRL_PAUSE = "PAUSE"
 CTRL_STOP = "STOP"
 CTRL_SHUTDOWN = "SHUTDOWN"
@@ -46,6 +48,9 @@ STATUS_HEALTHY = "HEALTHY"
 STATUS_ERROR = "ERROR"
 STATUS_SHUTTING_DOWN = "SHUTTING_DOWN"
 STATUS_STARTING = "STARTING"
+STATUS_PREPARING = "PREPARING"
+STATUS_READY = "READY"
+STATUS_ARMED = "ARMED"
 
 
 class TopicBuilder:
@@ -194,6 +199,8 @@ __all__ = [
     # Control topics & commands
     "TOPIC_CTRL",
     "CTRL_START",
+    "CTRL_PREPARE",
+    "CTRL_ACTIVATE",
     "CTRL_PAUSE",
     "CTRL_STOP",
     "CTRL_SHUTDOWN",
@@ -214,6 +221,9 @@ __all__ = [
     "STATUS_ERROR",
     "STATUS_SHUTTING_DOWN",
     "STATUS_STARTING",
+    "STATUS_PREPARING",
+    "STATUS_READY",
+    "STATUS_ARMED",
     # Topic helpers
     "TopicBuilder",
     "TopicValidator",
