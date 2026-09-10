@@ -54,9 +54,6 @@ from dexim.core.messages import (
 # Poll timeout for the ZMQ control socket. Short enough for responsive command
 # handling without wasting CPU cycles.
 _CTRL_POLL_TIMEOUT_MS: int = 5
-_PendingTransition = Literal["legacy", "arm", "grant"]
-
-
 class ManagedNode(abc.ABC):
     """Abstract base class for ZMQ-managed nodes."""
 
@@ -85,12 +82,12 @@ class ManagedNode(abc.ABC):
         self._prepared_epoch_id: str | None = None
         self._armed_epoch_id: str | None = None
         self._active_epoch_id: str | None = None
-        self._pending_transition: _PendingTransition | None = None
+        self._pending_transition: Literal["legacy", "arm", "grant"] | None = None
 
         # ZMQ context and sockets
-        self._ctx: zmq.Context | None = None
-        self._sub_control: zmq.Socket | None = None
-        self._push_status: zmq.Socket | None = None
+        self._ctx: zmq.Context[zmq.Socket[bytes]] | None = None
+        self._sub_control: zmq.Socket[bytes] | None = None
+        self._push_status: zmq.Socket[bytes] | None = None
         self._poller: zmq.Poller | None = None
 
         # Endpoints

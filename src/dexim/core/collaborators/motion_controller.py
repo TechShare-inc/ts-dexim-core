@@ -127,7 +127,9 @@ class MotionController:
 
         delta = target - current
         if self._max_joint_velocity_per_joint is not None:
-            max_delta = self._max_joint_velocity_per_joint * self.dt
+            max_delta: np.ndarray | float = (
+                self._max_joint_velocity_per_joint * self.dt
+            )
         else:
             max_delta = self._max_joint_velocity_rad_s * self.dt
         clamped = np.clip(delta, -max_delta, max_delta)
