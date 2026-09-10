@@ -174,6 +174,12 @@ class TrackerReceiver:
                 time.sleep(0.05)
                 continue
 
+            if getattr(pose, "tracking_valid", True) is False:
+                consecutive = 0
+                previous_timestamp = None
+                time.sleep(0.05)
+                continue
+
             now = time.time()
             if hasattr(pose, "timestamp") and pose.timestamp > 0:
                 age = now - pose.timestamp
