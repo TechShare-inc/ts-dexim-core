@@ -74,7 +74,7 @@ class RateLimiter:
         self.total_elapsed = 0.0
 
         # Rolling window for jitter (last 100 samples)
-        self.jitter_samples = deque(maxlen=100)
+        self.jitter_samples: deque[float] = deque(maxlen=100)
 
         logger.debug(
             f"RateLimiter initialized: {rate_hz}Hz ({self.target_period * 1000:.2f}ms period)"

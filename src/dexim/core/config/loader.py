@@ -74,17 +74,20 @@ def load_config(
     node_type = config_dict.get("node_type")
 
     if node_type == "hand_tracking":
-        config = _dict_to_hand_tracking_config(config_dict)
+        hand_tracking_config = _dict_to_hand_tracking_config(config_dict)
         logger.success(
-            f"HandTrackingConfig loaded: node_id={config.node_id}, camera_mode={config.camera.mode}"
+            "HandTrackingConfig loaded: "
+            f"node_id={hand_tracking_config.node_id}, "
+            f"camera_mode={hand_tracking_config.camera.mode}"
         )
-        return config
-    else:
-        config = _dict_to_control_config(config_dict)
-        logger.success(
-            f"Configuration loaded: robot_type={config.robot_type}, interface_mode={config.interface.mode}"
-        )
-        return config
+        return hand_tracking_config
+
+    control_config = _dict_to_control_config(config_dict)
+    logger.success(
+        f"Configuration loaded: robot_type={control_config.robot_type}, "
+        f"interface_mode={control_config.interface.mode}"
+    )
+    return control_config
 
 
 def _parse_interface(
