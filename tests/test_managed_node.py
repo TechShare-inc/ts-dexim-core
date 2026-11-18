@@ -12,6 +12,7 @@ from dexim.core.messages import (
     CTRL_START,
     CTRL_STOP,
     STATUS_ARMED,
+    STATUS_ERROR,
     STATUS_READY,
     STATUS_STARTED,
     STATUS_STARTING,
@@ -250,3 +251,21 @@ def test_stop_then_start_establishes_a_second_control_epoch() -> None:
     assert node.start_count == 2
     assert node.stop_count == 1
     assert node._teleop_active
+
+
+def test_startup_standby_failure_reports_error_and_cleans_up(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    node = ManagedNodeHarness()
+    monkeypatch.setattr(node, "on_standby", Mock(side_effect=RuntimeError("not ready")))
+    shutdown = Mock()
+    cleanup = Mock()
+    monkeypatch.setattr(node, "on_shutdown", shutdown)
+    monkeypatch.setattr(node, "_cleanup_zmq", cleanup)
+
+    with pytest.raises(RuntimeError, match="not ready"):
+        node.run()
+
+    assert node.reported_statuses == [(STATUS_ERROR, None)]
+    shutdown.assert_called_once_with()
+    cleanup.assert_called_once_with()
