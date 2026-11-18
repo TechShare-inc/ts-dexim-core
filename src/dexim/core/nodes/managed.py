@@ -104,10 +104,9 @@ class ManagedNode(abc.ABC):
     def run(self) -> None:
         """Main loop: enter standby, poll control, iterate subclass work, send heartbeats."""
         self.running = True
-        self.on_standby()
-        self.report_status(STATUS_STANDBY)
-
         try:
+            self.on_standby()
+            self.report_status(STATUS_STANDBY)
             while self.running:
                 self._poll_once(timeout_ms=_CTRL_POLL_TIMEOUT_MS)
                 self._pre_loop_iteration()
