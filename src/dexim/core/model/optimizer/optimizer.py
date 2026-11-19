@@ -60,10 +60,17 @@ class OptimizerConfig:
     upper_bounds: list[float] | None = None
     xtol_rel: float = 1e-4  # Relative tolerance for stopping
     ftol_rel: float = 1e-4  # Relative tolerance for stopping
-    max_time: float = 0.01  # Global maxtime in seconds (default 10 ms)
+    max_time: float | None = 0.01
+    max_evaluations: int | None = None
 
     def __post_init__(self):
         """Set default joint limits if not provided."""
+        if self.max_evaluations is not None and (
+            type(self.max_evaluations) is not int or self.max_evaluations < 1
+        ):
+            raise ValueError("max_evaluations must be a positive integer")
+        if self.max_time is None and self.max_evaluations is None:
+            raise ValueError("A time or evaluation budget is required")
         if len(self.alpha) != self.num_of_features:
             self.alpha = [1.0] * self.num_of_features
         if self.lower_bounds is None:
@@ -117,6 +124,7 @@ class VectorOptimizer:
         self.ftol_rel = self.config.ftol_rel
         # Use configurable global max time (seconds)
         self.max_time = self.config.max_time
+        self.max_evaluations = self.config.max_evaluations
         self.logger.debug(f"Initialized config: {self.config}")
 
         # Get actual robot joint limits from the model
@@ -166,7 +174,10 @@ class VectorOptimizer:
         opt.set_upper_bounds(self.upper_bounds)
         opt.set_lower_bounds(self.lower_bounds)
         # Set NLopt's internal max time for local optimization
-        opt.set_maxtime(self.max_time)
+        if self.max_time is not None:
+            opt.set_maxtime(self.max_time)
+        if self.max_evaluations is not None:
+            opt.set_maxeval(self.max_evaluations)
         return opt
 
     def retarget(self, target_features: npt.NDArray) -> tuple[npt.NDArray, NloptReturn]:
@@ -185,7 +196,7 @@ class VectorOptimizer:
 
             # Check global elapsed time before starting this iteration
             elapsed = time.time() - current_time
-            if elapsed > self.max_time:
+            if self.max_time is not None and elapsed > self.max_time:
                 self.logger.debug(
                     f"Global optimization timeout reached after {elapsed:.6f}s (max {self.max_time}s)"
                 )

@@ -1,7 +1,7 @@
 """TeleopOrchestrator - Central coordinator for multi-node teleoperation system.
 
 .. deprecated::
-    Use ``LaunchOrchestrator`` from ``dexim_nova_inspire.cli.launch`` instead.
+    Use the ``dexim launch`` command from ``dexim-teleop``.
     This class is kept for backward compatibility and will be removed in
     a future release.
 
@@ -111,8 +111,7 @@ class TeleopOrchestrator:
     """Central orchestrator for multi-node teleoperation system.
 
     .. deprecated::
-        Use ``LaunchOrchestrator`` from
-        ``dexim_nova_inspire.cli.launch`` instead.
+        Use the ``dexim launch`` command from ``dexim-teleop``.
 
     This class manages the lifecycle of multiple robot control nodes,
     providing centralized command broadcasting and status monitoring.
@@ -131,7 +130,7 @@ class TeleopOrchestrator:
         """
         warnings.warn(
             "TeleopOrchestrator is deprecated. "
-            "Use LaunchOrchestrator from dexim_nova_inspire.cli.launch instead.",
+            "Use the 'dexim launch' command from dexim-teleop.",
             DeprecationWarning,
             stacklevel=2,
         )

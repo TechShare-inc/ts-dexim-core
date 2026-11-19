@@ -8,6 +8,7 @@ handling package:// URL replacement automatically.
 from __future__ import annotations
 
 import os
+import sys
 import tempfile
 from pathlib import Path
 
@@ -177,7 +178,7 @@ def load_urdf_models(
             mimic=mimic,  # type: ignore
         )
         if verbose:
-            print(f"[OK] Models loaded from {urdf_path} (via temp file)")
+            print(f"[OK] Models loaded from {urdf_path} (via temp file)", file=sys.stderr)
     finally:
         # Clean up temporary file
         os.unlink(temp_urdf_path)

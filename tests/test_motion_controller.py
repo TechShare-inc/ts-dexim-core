@@ -112,6 +112,26 @@ def test_move_to_safe_rejects_disconnected_interface() -> None:
     assert interface.commands == []
 
 
+def test_new_control_epoch_reseeds_velocity_limit_from_hardware() -> None:
+    interface = FakeInterface([joint_state([0.0]), joint_state([0.0])])
+    motion = MotionController(
+        interface,
+        rate_hz=10.0,
+        enable_velocity_limiting=True,
+        max_joint_velocity_rad_s=1.0,
+    )
+    motion.initialize()
+    assert np.allclose(motion.apply_velocity_limits(np.array([1.0])), [0.1])
+    motion.rate_limiter.iterations = 7
+
+    observed = motion.start_control_epoch()
+    restarted = motion.apply_velocity_limits(np.array([1.0]))
+
+    assert observed is not None
+    assert np.allclose(restarted, [0.1])
+    assert motion.iterations == 0
+
+
 def test_move_to_safe_fails_closed_when_initial_read_fails() -> None:
     interface = FakeInterface([RuntimeError("read failed")])
 

@@ -209,6 +209,8 @@ class RigidPose:
         is_hmd: True if this tracker is a head-mounted display.
         user_id: User/session identifier from the tracking system.
         system_type: Optional tracking system name (e.g. 'SteamVR').
+        tracking_valid: False marks tracking loss; coordinates are placeholders
+            and must not be used for control or reference capture.
     """
 
     tracker_id: str
@@ -219,6 +221,7 @@ class RigidPose:
     is_hmd: bool = False
     user_id: int = 0
     system_type: str = ""
+    tracking_valid: bool = True  # Legacy publishers omit quality information.
 
     # ------------------------------------------------------------------
     # Serialization
@@ -240,6 +243,7 @@ class RigidPose:
             "is_hmd": self.is_hmd,
             "user_id": self.user_id,
             "system_type": self.system_type,
+            "tracking_valid": self.tracking_valid,
         }
 
     @classmethod
@@ -264,6 +268,7 @@ class RigidPose:
             is_hmd=bool(d.get("is_hmd", False)),
             user_id=int(d.get("user_id", 0)),
             system_type=str(d.get("system_type", "")),
+            tracking_valid=d.get("tracking_valid", True) is True,
         )
 
     # ------------------------------------------------------------------

@@ -44,6 +44,24 @@ class StatusInfo:
     countdown_active: bool = False
     """Whether a start countdown is in progress."""
 
+    control_epoch_id: str = ""
+    """Identifier of the Control Epoch being prepared or activated."""
+
+    activation_time: float | None = None
+    """Shared Unix timestamp at which the Control Epoch becomes active."""
+
+    countdown_duration: float = 0.0
+    """Configured countdown contributed to the shared activation deadline."""
+
+    preparation_ready: bool = False
+    """Whether preparation succeeded for ``control_epoch_id``."""
+
+    start_rejected: bool = False
+    """Whether device preparation rejected the pending Control Epoch."""
+
+    activation_rejected: bool = False
+    """Whether activation-time work rejected the pending Control Epoch."""
+
     # ------------------------------------------------------------------
     # Process fields (populated by LaunchManager, NOT by the node)
     # ------------------------------------------------------------------
@@ -198,6 +216,12 @@ class StatusInfo:
             "teleop_active",
             "countdown_remaining",
             "countdown_active",
+            "control_epoch_id",
+            "activation_time",
+            "countdown_duration",
+            "preparation_ready",
+            "start_rejected",
+            "activation_rejected",
             "pid",
             "memory_mb",
             "cpu_percent",
@@ -239,7 +263,7 @@ def _is_empty(value: Any) -> bool:
     if isinstance(value, (int, float)):
         return value == 0
     if isinstance(value, (str, dict, list, tuple)):
-        return len(value) == 0  # type: ignore[arg-type]
+        return len(value) == 0
     return False
 
 

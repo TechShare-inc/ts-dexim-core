@@ -8,7 +8,7 @@ import numpy as np
 from loguru import logger
 
 from dexim.core.nodes.utils import RateLimiter, smootherstep
-from dexim.core.robot_interface import JointCommand, RobotInterface
+from dexim.core.robot_interface import JointCommand, JointState, RobotInterface
 
 _SMOOTHERSTEP_PEAK_SLOPE = 1.875
 _SAFE_POSITION_TOLERANCE_RAD = 0.02
@@ -82,6 +82,29 @@ class MotionController:
                 logger.warning(f"Cannot read initial position: {exc}")
         self._last_data_time = time.time()
 
+    def start_control_epoch(self) -> JointState | None:
+        """Reset timing and seed a new control epoch from observed joints.
+
+        Returns:
+            The freshly observed joint state, or ``None`` when the interface
+            cannot be read. Velocity limiting fails closed to a fresh read on
+            its first command instead of retaining a previous epoch's cache.
+        """
+        self.rate_limiter.reset()
+        self._current_joint_positions = None
+        self._last_data_time = time.time()
+
+        try:
+            state = self._interface.read()
+        except Exception as exc:
+            logger.warning(f"Cannot seed control epoch from hardware: {exc}")
+            return None
+
+        if self._velocity_limiting_enabled:
+            self._current_joint_positions = state.q.copy()
+            logger.info("Velocity limiting seeded from current joint state")
+        return state
+
     def apply_velocity_limits(self, target: np.ndarray) -> np.ndarray:
         """Clamp joint-position change to respect velocity limits.
 
@@ -104,7 +127,9 @@ class MotionController:
 
         delta = target - current
         if self._max_joint_velocity_per_joint is not None:
-            max_delta = self._max_joint_velocity_per_joint * self.dt
+            max_delta: np.ndarray | float = (
+                self._max_joint_velocity_per_joint * self.dt
+            )
         else:
             max_delta = self._max_joint_velocity_rad_s * self.dt
         clamped = np.clip(delta, -max_delta, max_delta)
