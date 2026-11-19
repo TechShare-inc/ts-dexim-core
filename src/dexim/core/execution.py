@@ -6,6 +6,7 @@ import hashlib
 import json
 import math
 from dataclasses import asdict, dataclass
+from numbers import Real
 
 import numpy as np
 
@@ -15,13 +16,25 @@ def digest(value: object) -> str:
     return "sha256:" + hashlib.sha256(encoded.encode()).hexdigest()
 
 
-def position_vector(value, size: int) -> np.ndarray:
-    q = np.asarray(value, dtype=float)
-    if q.shape != (size,) or not np.isfinite(q).all():
-        raise ValueError(
-            f"Expected {size} finite positions in a one-dimensional vector"
+def position_vector(value: object, size: int) -> np.ndarray:
+    """Return a one-dimensional float vector of finite real positions."""
+    message = f"Expected {size} finite positions in a one-dimensional vector"
+    try:
+        positions = np.asarray(
+            value, dtype=None if isinstance(value, np.ndarray) else object
         )
-    return q
+        if positions.shape == (size,) and all(
+            isinstance(item, Real)
+            and not isinstance(item, (bool, np.bool_, np.timedelta64))
+            for item in positions
+        ):
+            with np.errstate(over="ignore"):
+                result = np.asarray(positions, dtype=float)
+            if np.isfinite(result).all():
+                return result
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError(message) from exc
+    raise ValueError(message)
 
 
 @dataclass(frozen=True)
@@ -64,7 +77,7 @@ class ExecutionDescriptor:
     mapping_revision: str = "canonical-radians-position-v1"
 
     def __post_init__(self):
-        for key in ("joint_names", "lower", "upper", "frame_names"):
+        for key in ("joint_names", "frame_names"):
             object.__setattr__(self, key, tuple(getattr(self, key)))
         if self.backend not in {"kinematic", "hardware", "mujoco", "isaac"}:
             raise ValueError("Unsupported execution backend")
@@ -83,8 +96,9 @@ class ExecutionDescriptor:
         n = len(self.joint_names)
         if not n or len(set(self.joint_names)) != n:
             raise ValueError("Unique ordered joint names are required")
-        position_vector(self.lower, n)
-        position_vector(self.upper, n)
+        for key in ("lower", "upper"):
+            bounds = position_vector(getattr(self, key), n)
+            object.__setattr__(self, key, tuple(bounds.tolist()))
         if any(lo >= hi for lo, hi in zip(self.lower, self.upper)):
             raise ValueError("Joint limits must have a nonempty interval")
 
