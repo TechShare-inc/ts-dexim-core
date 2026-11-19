@@ -75,6 +75,7 @@ class ExecutionDescriptor:
     backend: str = "kinematic"
     frame_names: tuple[str, ...] = ()
     mapping_revision: str = "canonical-radians-position-v1"
+    runtime_id: str | None = None
 
     def __post_init__(self):
         for key in ("joint_names", "frame_names"):
@@ -91,6 +92,13 @@ class ExecutionDescriptor:
             )
         ):
             raise ValueError("Device, model and joint identities are required")
+        if self.backend == "hardware":
+            if self.runtime_id not in {"native", "fake-vendor"}:
+                raise ValueError(
+                    "Hardware descriptors require explicit runtime identity"
+                )
+        elif self.runtime_id is not None:
+            raise ValueError("Runtime identity is reserved for hardware descriptors")
         if self.mapping_revision != "canonical-radians-position-v1":
             raise ValueError("Unsupported canonical joint mapping")
         n = len(self.joint_names)
@@ -104,13 +112,16 @@ class ExecutionDescriptor:
 
     @property
     def identity(self) -> str:
-        return digest(asdict(self))
+        data = asdict(self)
+        if self.runtime_id is None:
+            data.pop("runtime_id")  # Preserve existing v6 descriptor digests.
+        return digest(data)
 
     @property
     def origin(self) -> str:
         return {
             "kinematic": "synthetic",
-            "hardware": "measured",
+            "hardware": "synthetic" if self.runtime_id == "fake-vendor" else "measured",
             "mujoco": "simulated",
             "isaac": "simulated",
         }[self.backend]
@@ -146,6 +157,9 @@ class ExecutionSample:
     clock_id: str = "host-monotonic"
     qd: tuple[float, ...] | None = None
     tau: tuple[float, ...] | None = None
+    runtime_id: str | None = None
+    receipt: dict | None = None
+    acquisition_sequence: int | None = None
 
     def __post_init__(self):
         for key in ("q", "requested_q"):
@@ -160,12 +174,60 @@ class ExecutionSample:
             value = getattr(self, key)
             if not isinstance(value, str) or not value or len(value) > 256:
                 raise ValueError(f"Invalid {key}")
-        if self.version != 6 or type(self.version) is not int:
+        if type(self.version) is not int or self.version not in {6, 7}:
             raise ValueError("Unsupported execution stream version")
-        if self.backend != "kinematic" or self.origin != "synthetic":
-            raise ValueError(
-                "Version 6 currently admits synthetic kinematic state only"
-            )
+        if self.version == 6:
+            if self.backend != "kinematic" or self.origin != "synthetic":
+                raise ValueError("Version 6 admits synthetic kinematic state only")
+            if (
+                self.runtime_id is not None
+                or self.receipt is not None
+                or self.acquisition_sequence is not None
+            ):
+                raise ValueError("Version 6 cannot carry hardware semantics")
+        else:
+            if (
+                self.backend != "hardware"
+                or self.runtime_id not in {"native", "fake-vendor"}
+                or self.origin
+                != ("measured" if self.runtime_id == "native" else "synthetic")
+            ):
+                raise ValueError("Explicit hardware runtime/origin required")
+            if self.kind == "action":
+                from dexim.core.hardware import Submission
+
+                if not isinstance(self.receipt, dict):
+                    raise ValueError("Hardware actions require an executor receipt")
+                receipt = Submission(**self.receipt)
+                if (
+                    receipt.instance_id != self.instance_id
+                    or receipt.epoch_id != self.epoch_id
+                    or receipt.input_sequence != self.input_sequence
+                    or receipt.input_at != self.input_at
+                    or receipt.requested_q != self.requested_q
+                    or tuple(receipt.q) != self.q
+                    or receipt.outcome not in {"accepted", "failed", "unknown"}
+                    or not receipt.command_id
+                    or len(receipt.vendor_target) != len(self.q)
+                    or receipt.dispatched_at != self.source_at
+                    or not 0
+                    <= receipt.input_at
+                    <= receipt.dispatched_at
+                    <= receipt.completed_at
+                    <= self.received_at
+                ):
+                    raise ValueError("Invalid hardware receipt identity or timing")
+                position_vector(receipt.vendor_target, len(self.q))
+                if self.acquisition_sequence is not None:
+                    raise ValueError("Action is not measured feedback")
+            elif (
+                self.receipt is not None
+                or type(self.acquisition_sequence) is not int
+                or self.acquisition_sequence < 1
+            ):
+                raise ValueError(
+                    "Hardware observations require successful acquisition identity"
+                )
         if self.clock_id != "host-monotonic":
             raise ValueError("Version 6 requires host monotonic time")
         if self.kind not in {"action", "observed"}:
@@ -215,6 +277,7 @@ class ExecutionSample:
             or self.descriptor_id != descriptor.identity
             or self.backend != descriptor.backend
             or self.origin != descriptor.origin
+            or (self.version == 7 and self.runtime_id != descriptor.runtime_id)
             or len(self.q) != len(descriptor.joint_names)
         ):
             raise ValueError("Execution descriptor mismatch")
